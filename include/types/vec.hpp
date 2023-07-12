@@ -110,7 +110,7 @@ constexpr auto operator/(const vec< dim, T > & v, const double & u) {
   for (int i = 0; i < dim; i++) {
     out[i] = v[i] / u;
   }
-  return out; 
+  return out;
 }
 
 template < uint32_t dim, typename T >

@@ -1,5 +1,7 @@
 #include "common.hpp"
 
+#include <iomanip>
+
 #include "operations/dot.hpp"
 #include "operations/linear_solve.hpp"
 
@@ -34,8 +36,8 @@ auto RotatedFiberComposite3D_New(
         double num, double nuzp, double nupp,
         double Gzp, double Vf,
         double am, double afzz, double afpp,
-        const bool thermalStress, const bool cylDom)
-{
+        const bool thermalStress, const bool cylDom) {
+
     // NOTE: Order used until CPlyMat is computed: 33 11 22 13 12 23 (this order is later
     // updated with a permutation matrix to match the standard Voigt notation)
     auto Vm = 1-Vf; // Matrix volume fraction
@@ -106,22 +108,21 @@ auto RotatedFiberComposite3D_New(
 
     // Correct G12 and G13 according to Hashin's estimate
     bool useHashinEstimate(false);
-    if (useHashinEstimate)
-    {
-        double Gm = Em / (2.0 * (1.0 + num));
-        double G12h = Gm * (Gm * Vm + Gzp * (1.0 + Vf)) / (Gm * (1.0 + Vf) + Gzp * Vm);
+    if (useHashinEstimate) {
+      double Gm = Em / (2.0 * (1.0 + num));
+      double G12h = Gm * (Gm * Vm + Gzp * (1.0 + Vf)) / (Gm * (1.0 + Vf) + Gzp * Vm);
 
-        // Take average of consistent and Hashin's shear moduli
-        G12 = (G12c + G12h) / 2.0;
-        G13 = (G13c + G12h) / 2.0;
+      // Take average of consistent and Hashin's shear moduli
+      G12 = (G12c + G12h) / 2.0;
+      G13 = (G13c + G12h) / 2.0;
 
-        // Replace ply terms with correct shear terms
-        // Note: no longer reordering like in LARCH:
-        // Order used in this function: 11 22 33 23 31 12
-        // Order that LARCH changes to (but not here): 33 11 22 12 23 31
-        Smat[3][3] = 1.0/(2.0*G23); // In LARCH: 1.0/(2.0*G12);
-        Smat[4][4] = 1.0/(2.0*G13); // In LARCH: 1.0/(2.0*G23);
-        Smat[5][5] = 1.0/(2.0*G12); // In LARCH: 1.0/(2.0*G13);
+      // Replace ply terms with correct shear terms
+      // Note: no longer reordering like in LARCH:
+      // Order used in this function: 11 22 33 23 31 12
+      // Order that LARCH changes to (but not here): 33 11 22 12 23 31
+      Smat[3][3] = 1.0/(2.0*G23); // In LARCH: 1.0/(2.0*G12);
+      Smat[4][4] = 1.0/(2.0*G13); // In LARCH: 1.0/(2.0*G23);
+      Smat[5][5] = 1.0/(2.0*G12); // In LARCH: 1.0/(2.0*G13);
     }
 
     // Compute the stiffness tensor of the ply from the compliance
@@ -153,7 +154,7 @@ auto RotatedFiberComposite3D_New(
     //// -----------------------
 
     // Compute rotation matrices
-    using std::sin, std::cos,  std::atan, std::acos, std::sqrt;
+    using std::sin, std::cos, std::atan, std::acos, std::sqrt;
     double Xcenter = 0.0, Ycenter = 0.0;
     auto Xdist = x[0]-Xcenter;
     auto Ydist = x[1]-Ycenter;
@@ -177,114 +178,114 @@ auto RotatedFiberComposite3D_New(
     // operations, but the extra cost should not be an inpediment for the size of problems solved.
     // For more details on variable names and operations, see the homogenize.py file of the LARCH code.
     mat<3, 3, TemperatureType > thermal_strain{};
-    if (thermalStress)
-    {
-        // Generate thermal expansion coefficients
-        vec<6, double> alpha_m{};
-        alpha_m[0] = am;
-        alpha_m[1] = am;
-        alpha_m[2] = am;
+    if (thermalStress) {
 
-        vec<6,double> alpha_f{};
-        alpha_f[0] = afzz;
-        alpha_f[1] = afpp;
-        alpha_f[2] = afpp;
+      // Generate thermal expansion coefficients
+      vec<6, double> alpha_m{};
+      alpha_m[0] = am;
+      alpha_m[1] = am;
+      alpha_m[2] = am;
 
-        mat<6,6,double> Smat_m{};
-        Smat_m[0][0] = 1.0/Em;
-        Smat_m[1][1] = 1.0/Em;
-        Smat_m[2][2] = 1.0/Em;
-        Smat_m[0][1] = -num/Em;
-        Smat_m[0][2] = -num/Em;
-        Smat_m[1][0] = -num/Em;
-        Smat_m[1][2] = -num/Em;
-        Smat_m[2][0] = -num/Em;
-        Smat_m[2][1] = -num/Em;
-        Smat_m[3][3] = (1.0+num)/Em;
-        Smat_m[4][4] = (1.0+num)/Em;
-        Smat_m[5][5] = (1.0+num)/Em;
-        auto Cmat_m = inv(Smat_m);
+      vec<6,double> alpha_f{};
+      alpha_f[0] = afzz;
+      alpha_f[1] = afpp;
+      alpha_f[2] = afpp;
 
-        mat<6,6,double> Smat_f{};
-        Smat_f[0][0] = 1.0/Ez;
-        Smat_f[1][1] = 1.0/Ep;
-        Smat_f[2][2] = 1.0/Ep;
-        Smat_f[0][1] = -nuzp/Ez;
-        Smat_f[0][2] = -nuzp/Ez;
-        Smat_f[1][0] = -nuzp/Ez;
-        Smat_f[2][0] = -nuzp/Ez;
-        Smat_f[1][2] = -nupp/Ep;
-        Smat_f[2][1] = -nupp/Ep;
-        Smat_f[3][3] = 0.5/Gzp;
-        Smat_f[5][5] = 0.5/Gzp;
-        Smat_f[4][4] = (1.0+nupp)/Ep;
-        auto Cmat_f = inv(Smat_f);
+      mat<6,6,double> Smat_m{};
+      Smat_m[0][0] = 1.0/Em;
+      Smat_m[1][1] = 1.0/Em;
+      Smat_m[2][2] = 1.0/Em;
+      Smat_m[0][1] = -num/Em;
+      Smat_m[0][2] = -num/Em;
+      Smat_m[1][0] = -num/Em;
+      Smat_m[1][2] = -num/Em;
+      Smat_m[2][0] = -num/Em;
+      Smat_m[2][1] = -num/Em;
+      Smat_m[3][3] = (1.0+num)/Em;
+      Smat_m[4][4] = (1.0+num)/Em;
+      Smat_m[5][5] = (1.0+num)/Em;
+      auto Cmat_m = inv(Smat_m);
 
-        // Extract components and perform required operations on subsets (Group 1)
-        auto Cuv_m = make_mat<5, 5>([&](auto i, auto j) { return Cmat_m[i+1][j+1]; });
-        auto Cuv_f = make_mat<5, 5>([&](auto i, auto j) { return Cmat_f[i+1][j+1]; });
+      mat<6,6,double> Smat_f{};
+      Smat_f[0][0] = 1.0/Ez;
+      Smat_f[1][1] = 1.0/Ep;
+      Smat_f[2][2] = 1.0/Ep;
+      Smat_f[0][1] = -nuzp/Ez;
+      Smat_f[0][2] = -nuzp/Ez;
+      Smat_f[1][0] = -nuzp/Ez;
+      Smat_f[2][0] = -nuzp/Ez;
+      Smat_f[1][2] = -nupp/Ep;
+      Smat_f[2][1] = -nupp/Ep;
+      Smat_f[3][3] = 0.5/Gzp;
+      Smat_f[5][5] = 0.5/Gzp;
+      Smat_f[4][4] = (1.0+nupp)/Ep;
+      auto Cmat_f = inv(Smat_f);
 
-        auto Cub_m = make_vec<5>([&](int i) { return Cmat_m[i+1][0]; });
-        auto Cub_f = make_vec<5>([&](int i) { return Cmat_f[i+1][0]; });
+      // Extract components and perform required operations on subsets (Group 1)
+      auto Cuv_m = make_mat<5, 5>([&](auto i, auto j) { return Cmat_m[i+1][j+1]; });
+      auto Cuv_f = make_mat<5, 5>([&](auto i, auto j) { return Cmat_f[i+1][j+1]; });
 
-        auto Stildn_m = inv(Cuv_m);
-        auto Stildn_f = inv(Cuv_f);
+      auto Cub_m = make_vec<5>([&](int i) { return Cmat_m[i+1][0]; });
+      auto Cub_f = make_vec<5>([&](int i) { return Cmat_f[i+1][0]; });
 
-        auto Btildn_m = dot(Stildn_m, Cub_m);
-        auto Btildn_f = dot(Stildn_f, Cub_f);
+      auto Stildn_m = inv(Cuv_m);
+      auto Stildn_f = inv(Cuv_f);
 
-        auto alphatildn_m = make_vec<5>([&](int i) { return alpha_m[i+1] + alpha_m[0] * Btildn_m[i]; });
-        auto alphatildn_f = make_vec<5>([&](int i) { return alpha_f[i+1] + alpha_f[0] * Btildn_f[i]; });
+      auto Btildn_m = dot(Stildn_m, Cub_m);
+      auto Btildn_f = dot(Stildn_f, Cub_f);
 
-        auto Stildbar = Vm * Stildn_m + Vf * Stildn_f;
-        auto Btildbar = Vm * Btildn_m + Vf * Btildn_f;
-        auto alphatildbar = make_vec<5>([&](int i) { return Vm * alphatildn_m[i] + Vf * alphatildn_f[i]; });
+      auto alphatildn_m = make_vec<5>([&](int i) { return alpha_m[i+1] + alpha_m[0] * Btildn_m[i]; });
+      auto alphatildn_f = make_vec<5>([&](int i) { return alpha_f[i+1] + alpha_f[0] * Btildn_f[i]; });
 
-        auto Cbarhat = inv(Stildbar);
-        auto CB = dot(Cbarhat, Btildbar);
+      auto Stildbar = Vm * Stildn_m + Vf * Stildn_f;
+      auto Btildbar = Vm * Btildn_m + Vf * Btildn_f;
+      auto alphatildbar = make_vec<5>([&](int i) { return Vm * alphatildn_m[i] + Vf * alphatildn_f[i]; });
 
-        auto Cbarhat_Alphatildbar = dot(Cbarhat, alphatildbar);
+      auto Cbarhat = inv(Stildbar);
+      auto CB = dot(Cbarhat, Btildbar);
 
-        // Extract components and perform required operations on subsets (Group 2)
-        auto Cau_m = make_vec<5>([&](int i) { return Cmat_m[0][i+1]; });
-        auto Cau_f = make_vec<5>([&](int i) { return Cmat_f[0][i+1]; });
+      auto Cbarhat_Alphatildbar = dot(Cbarhat, alphatildbar);
 
-        auto Cvb_m = make_vec<5>([&](int i) { return Cmat_m[i+1][0]; });
-        auto Cvb_f = make_vec<5>([&](int i) { return Cmat_f[i+1][0]; });
+      // Extract components and perform required operations on subsets (Group 2)
+      auto Cau_m = make_vec<5>([&](int i) { return Cmat_m[0][i+1]; });
+      auto Cau_f = make_vec<5>([&](int i) { return Cmat_f[0][i+1]; });
 
-        auto Dtildn_m = dot(Cau_m, Stildn_m);
-        auto Dtildn_f = dot(Cau_f, Stildn_f);
-        auto Dtildn = Vm * Dtildn_m + Vf * Dtildn_f;
+      auto Cvb_m = make_vec<5>([&](int i) { return Cmat_m[i+1][0]; });
+      auto Cvb_f = make_vec<5>([&](int i) { return Cmat_f[i+1][0]; });
 
-        auto Ctildn_m = dot(Dtildn_m, Cvb_m);
-        auto Ctildn_f = dot(Dtildn_f, Cvb_f);
+      auto Dtildn_m = dot(Cau_m, Stildn_m);
+      auto Dtildn_f = dot(Cau_f, Stildn_f);
+      auto Dtildn = Vm * Dtildn_m + Vf * Dtildn_f;
 
-        auto Cbarbarab_m = Vm * (Cmat_m[0][0] - Ctildn_m);
-        auto Cbarbarab_f = Vf * (Cmat_f[0][0] - Ctildn_f);
-        auto Cbarbarab = Cbarbarab_m + Cbarbarab_f + dot(Dtildn, CB);
+      auto Ctildn_m = dot(Dtildn_m, Cvb_m);
+      auto Ctildn_f = dot(Dtildn_f, Cvb_f);
 
-        auto Cbarbarav = dot(Dtildn, Cbarhat);
+      auto Cbarbarab_m = Vm * (Cmat_m[0][0] - Ctildn_m);
+      auto Cbarbarab_f = Vf * (Cmat_f[0][0] - Ctildn_f);
+      auto Cbarbarab = Cbarbarab_m + Cbarbarab_f + dot(Dtildn, CB);
 
-        auto alphabara_m = Vm * ((Cmat_m[0][0] - Ctildn_m) * alpha_m[0]);
-        auto alphabara_f = Vf * ((Cmat_f[0][0] - Ctildn_f) * alpha_f[0]);
-        auto alphabara = alphabara_m + alphabara_f + dot(Dtildn, alphatildbar);
+      auto Cbarbarav = dot(Dtildn, Cbarhat);
 
-        // Put all the components together into single matrices
-        auto Cbarbar = make_mat<3, 3>([&](auto i, auto j)
-        {
-            if (i>0 && j>0) {return Cbarhat[i-1][j-1];}
-            else if (i>0 && j==0) {return CB[i-1];}
-            else if (i==0 && j==0) {return Cbarbarab;}
-            else if (i==0 && j>0) {return Cbarbarav[j-1];}
-            else {return 0.0;}
-        });
+      auto alphabara_m = Vm * ((Cmat_m[0][0] - Ctildn_m) * alpha_m[0]);
+      auto alphabara_f = Vf * ((Cmat_f[0][0] - Ctildn_f) * alpha_f[0]);
+      auto alphabara = alphabara_m + alphabara_f + dot(Dtildn, alphatildbar);
 
-        vec alphabar = {{alphabara, Cbarhat_Alphatildbar[0], Cbarhat_Alphatildbar[1]}};
+      // Put all the components together into single matrices
+      auto Cbarbar = make_mat<3, 3>([&](auto i, auto j)
+      {
+          if (i>0 && j>0) {return Cbarhat[i-1][j-1];}
+          else if (i>0 && j==0) {return CB[i-1];}
+          else if (i==0 && j==0) {return Cbarbarab;}
+          else if (i==0 && j>0) {return Cbarbarav[j-1];}
+          else {return 0.0;}
+      });
 
-        auto diag = deltaT * linear_solve(Cbarbar, alphabar);
-        thermal_strain[0][0] = diag[0];
-        thermal_strain[1][1] = diag[1];
-        thermal_strain[2][2] = diag[2];
+      vec alphabar = {{alphabara, Cbarhat_Alphatildbar[0], Cbarhat_Alphatildbar[1]}};
+
+      auto diag = deltaT * linear_solve(Cbarbar, alphabar);
+      thermal_strain[0][0] = diag[0];
+      thermal_strain[1][1] = diag[1];
+      thermal_strain[2][2] = diag[2];
 
     }
 
@@ -350,6 +351,39 @@ void run_test() {
   bool thermalStress = true;
   bool cylDom = true;
 
+
+  //std::cout << '{';
+  //std::cout << "deltaT, ";
+  //std::cout << "Em, ";
+  //std::cout << "Ez, ";
+  //std::cout << "Ep,";
+  //std::cout << "num,";
+  //std::cout << "nuzp,";
+  //std::cout << "nupp,";
+  //std::cout << "Gzp,";
+  //std::cout << "Vf,";
+  //std::cout << "am,";
+  //std::cout << "afzz,";
+  //std::cout << "afpp";
+  //std::cout << '}';
+  //std::cout << "=";
+  //std::cout << '{';
+  //std::cout << std::setprecision(16);
+  //std::cout << deltaT << ',';
+  //std::cout << Em << ',';
+  //std::cout << Ez << ',';
+  //std::cout << Ep << ',';
+  //std::cout << num << ',';
+  //std::cout << nuzp << ',';
+  //std::cout << nupp << ',';
+  //std::cout << Gzp << ',';
+  //std::cout << Vf << ',';
+  //std::cout << am << ',';
+  //std::cout << afzz << ',';
+  //std::cout << afpp;
+  //std::cout << '}';
+  //std::cout << std::endl;
+
   auto sigma_original = RotatedFiberComposite3D_Original(
     x, du_dx, alpha0, deltaT, 
     Em, Ez, Ep,
@@ -373,7 +407,7 @@ void run_test() {
 }
 
 int main() {
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 1; i++) {
     run_test();
   }
 }
