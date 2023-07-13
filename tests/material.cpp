@@ -56,7 +56,13 @@ auto RotatedFiberComposite3D_New(
     Jmat[4][4] = (1.0+num)/Em + (Vf/Vm)*(1.0/(2.0*Gzp));
     Jmat[5][5] = Jmat[4][4];
 
+    std::cout << std::setprecision(16);
+    std::cout << "Jmat: " << Jmat << std::endl;
+
     auto Dmat = inv(Jmat);
+
+    std::cout << std::setprecision(16);
+    std::cout << "Dmat: " << Dmat << std::endl;
 
     mat<6,6,double> Bmat{};
     Bmat[0][0] = 1.0;
@@ -67,6 +73,9 @@ auto RotatedFiberComposite3D_New(
     Bmat[3][3] = (1.0/Vm);
     Bmat[4][4] = (1.0/Vm);
     Bmat[5][5] = (1.0/Vm);
+
+    std::cout << std::setprecision(16);
+    std::cout << "Bmat: " << Bmat << std::endl;
 
     vec<6, double> xivec{};
     xivec[1] = nuzp;
@@ -94,6 +103,9 @@ auto RotatedFiberComposite3D_New(
         Emat[i+1][j] = temp1mat[i][j];
       }
     }
+
+    std::cout << std::setprecision(16);
+    std::cout << "Emat: " << Emat << std::endl;
 
     // Compute compliance
     auto Smat = inv(Emat);
@@ -151,6 +163,9 @@ auto RotatedFiberComposite3D_New(
 
     auto reOrdCPlyMat = dot(transpose(SvMat), dot(CPlyMat, QvMat));
 
+    std::cout << std::setprecision(16);
+    std::cout << "reOrdCPlyMat: " << reOrdCPlyMat << std::endl;
+
     //// -----------------------
 
     // Compute rotation matrices
@@ -164,125 +179,36 @@ auto RotatedFiberComposite3D_New(
       Theta = 0.0;
     }
 
-    // auto Alpha =  Alpha0;
-    // auto Alpha =  M_PI_2 - acos(2.0*sin(Alpha0)*sin(Theta)/(sqrt(1.0 + 4.0*sin(Alpha0)*sin(Alpha0)*sin(Theta)*sin(Theta)))); // Dan's expression
-    auto sT = sin(Theta);
-    auto cT = cos(Theta);
-    auto sA0 = sin(Alpha0);
-    auto Alpha = acos((2.0*sA0*sT) / (sqrt(1.0 + 4.0*sA0*sA0*sT*sT))); // Dan's expression
-    auto sA = sin(Alpha);
-    auto cA = cos(Alpha);
-
-    // NOTE: following pyhton LARCH implementation which is more general and performs different computations
-    // than the ones above (but reached to the same final material tensor). There is some redundancy in
-    // operations, but the extra cost should not be an inpediment for the size of problems solved.
     // For more details on variable names and operations, see the homogenize.py file of the LARCH code.
     mat<3, 3, TemperatureType > thermal_strain{};
     if (thermalStress) {
 
-      // Generate thermal expansion coefficients
-      vec<6, double> alpha_m{};
-      alpha_m[0] = am;
-      alpha_m[1] = am;
-      alpha_m[2] = am;
+      double s0 = Vf/Ep - (nuzp*nuzp*Vf)/Ez + (Vm - num*num*Vm)/Em;
+      double s1 = -((nupp*Vf)/Ep) - (nuzp*nuzp*Vf)/Ez - (num*(1 + num)*Vm)/Em;
+      mat2 Stildbar = {{{s0, s1}, {s1, s0}}};
 
-      vec<6,double> alpha_f{};
-      alpha_f[0] = afzz;
-      alpha_f[1] = afpp;
-      alpha_f[2] = afpp;
+      vec2 Dtildn = {nuzp * Vf + num * Vm, nuzp * Vf + num * Vm};
+      vec2 Btildbar = {nuzp * Vf + num * Vm, nuzp * Vf + num * Vm}; // the same as Dtildn?
+      vec2 alphatildbar = {afpp * Vf + afzz * nuzp * Vf + am * (1 + num) * Vm, afpp * Vf + afzz * nuzp * Vf + am * (1 + num) * Vm};
 
-      mat<6,6,double> Smat_m{};
-      Smat_m[0][0] = 1.0/Em;
-      Smat_m[1][1] = 1.0/Em;
-      Smat_m[2][2] = 1.0/Em;
-      Smat_m[0][1] = -num/Em;
-      Smat_m[0][2] = -num/Em;
-      Smat_m[1][0] = -num/Em;
-      Smat_m[1][2] = -num/Em;
-      Smat_m[2][0] = -num/Em;
-      Smat_m[2][1] = -num/Em;
-      Smat_m[3][3] = (1.0+num)/Em;
-      Smat_m[4][4] = (1.0+num)/Em;
-      Smat_m[5][5] = (1.0+num)/Em;
-      auto Cmat_m = inv(Smat_m);
+      mat2 C22 = inv(Stildbar);
+      vec2 C12 = dot(Dtildn, C22);
+      vec2 C21 = dot(C22, Btildbar);
+      double C11 = Em*Vm + Ez*Vf + dot(Dtildn, C12);
 
-      mat<6,6,double> Smat_f{};
-      Smat_f[0][0] = 1.0/Ez;
-      Smat_f[1][1] = 1.0/Ep;
-      Smat_f[2][2] = 1.0/Ep;
-      Smat_f[0][1] = -nuzp/Ez;
-      Smat_f[0][2] = -nuzp/Ez;
-      Smat_f[1][0] = -nuzp/Ez;
-      Smat_f[2][0] = -nuzp/Ez;
-      Smat_f[1][2] = -nupp/Ep;
-      Smat_f[2][1] = -nupp/Ep;
-      Smat_f[3][3] = 0.5/Gzp;
-      Smat_f[5][5] = 0.5/Gzp;
-      Smat_f[4][4] = (1.0+nupp)/Ep;
-      auto Cmat_f = inv(Smat_f);
+      mat3 Ceff = {{
+        {C11,    C12[0],    C12[1]},
+        {C21[0], C22[0][0], C22[0][1]},
+        {C21[1], C22[1][0], C22[1][1]}
+      }};
 
-      // Extract components and perform required operations on subsets (Group 1)
-      auto Cuv_m = make_mat<5, 5>([&](auto i, auto j) { return Cmat_m[i+1][j+1]; });
-      auto Cuv_f = make_mat<5, 5>([&](auto i, auto j) { return Cmat_f[i+1][j+1]; });
+      double alpha1 = Em*Vm*am + Ez*Vf*afzz + dot(Dtildn, alphatildbar);
+      vec2 alpha2 = dot(C22, alphatildbar);
 
-      auto Cub_m = make_vec<5>([&](int i) { return Cmat_m[i+1][0]; });
-      auto Cub_f = make_vec<5>([&](int i) { return Cmat_f[i+1][0]; });
+      vec3 alphabar = {alpha1, alpha2[0], alpha2[1]};
 
-      auto Stildn_m = inv(Cuv_m);
-      auto Stildn_f = inv(Cuv_f);
+      auto diag = deltaT * linear_solve(Ceff, alphabar);
 
-      auto Btildn_m = dot(Stildn_m, Cub_m);
-      auto Btildn_f = dot(Stildn_f, Cub_f);
-
-      auto alphatildn_m = make_vec<5>([&](int i) { return alpha_m[i+1] + alpha_m[0] * Btildn_m[i]; });
-      auto alphatildn_f = make_vec<5>([&](int i) { return alpha_f[i+1] + alpha_f[0] * Btildn_f[i]; });
-
-      auto Stildbar = Vm * Stildn_m + Vf * Stildn_f;
-      auto Btildbar = Vm * Btildn_m + Vf * Btildn_f;
-      auto alphatildbar = make_vec<5>([&](int i) { return Vm * alphatildn_m[i] + Vf * alphatildn_f[i]; });
-
-      auto Cbarhat = inv(Stildbar);
-      auto CB = dot(Cbarhat, Btildbar);
-
-      auto Cbarhat_Alphatildbar = dot(Cbarhat, alphatildbar);
-
-      // Extract components and perform required operations on subsets (Group 2)
-      auto Cau_m = make_vec<5>([&](int i) { return Cmat_m[0][i+1]; });
-      auto Cau_f = make_vec<5>([&](int i) { return Cmat_f[0][i+1]; });
-
-      auto Cvb_m = make_vec<5>([&](int i) { return Cmat_m[i+1][0]; });
-      auto Cvb_f = make_vec<5>([&](int i) { return Cmat_f[i+1][0]; });
-
-      auto Dtildn_m = dot(Cau_m, Stildn_m);
-      auto Dtildn_f = dot(Cau_f, Stildn_f);
-      auto Dtildn = Vm * Dtildn_m + Vf * Dtildn_f;
-
-      auto Ctildn_m = dot(Dtildn_m, Cvb_m);
-      auto Ctildn_f = dot(Dtildn_f, Cvb_f);
-
-      auto Cbarbarab_m = Vm * (Cmat_m[0][0] - Ctildn_m);
-      auto Cbarbarab_f = Vf * (Cmat_f[0][0] - Ctildn_f);
-      auto Cbarbarab = Cbarbarab_m + Cbarbarab_f + dot(Dtildn, CB);
-
-      auto Cbarbarav = dot(Dtildn, Cbarhat);
-
-      auto alphabara_m = Vm * ((Cmat_m[0][0] - Ctildn_m) * alpha_m[0]);
-      auto alphabara_f = Vf * ((Cmat_f[0][0] - Ctildn_f) * alpha_f[0]);
-      auto alphabara = alphabara_m + alphabara_f + dot(Dtildn, alphatildbar);
-
-      // Put all the components together into single matrices
-      auto Cbarbar = make_mat<3, 3>([&](auto i, auto j)
-      {
-          if (i>0 && j>0) {return Cbarhat[i-1][j-1];}
-          else if (i>0 && j==0) {return CB[i-1];}
-          else if (i==0 && j==0) {return Cbarbarab;}
-          else if (i==0 && j>0) {return Cbarbarav[j-1];}
-          else {return 0.0;}
-      });
-
-      vec alphabar = {{alphabara, Cbarhat_Alphatildbar[0], Cbarhat_Alphatildbar[1]}};
-
-      auto diag = deltaT * linear_solve(Cbarbar, alphabar);
       thermal_strain[0][0] = diag[0];
       thermal_strain[1][1] = diag[1];
       thermal_strain[2][2] = diag[2];
@@ -292,6 +218,13 @@ auto RotatedFiberComposite3D_New(
     vec6 wv{1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f};
 
     auto strain = 0.5 * (du_dx + transpose(du_dx)) + thermal_strain;
+
+    auto sT = sin(Theta);
+    auto cT = cos(Theta);
+    auto sA0 = sin(Alpha0);
+    auto Alpha = acos((2.0*sA0*sT) / (sqrt(1.0 + 4.0*sA0*sA0*sT*sT))); // Dan's expression
+    auto sA = sin(Alpha);
+    auto cA = cos(Alpha);
 
     mat3 R = {{
       {cA*cT, -sT, cT*sA},
@@ -351,38 +284,39 @@ void run_test() {
   bool thermalStress = true;
   bool cylDom = true;
 
-
-  //std::cout << '{';
-  //std::cout << "deltaT, ";
-  //std::cout << "Em, ";
-  //std::cout << "Ez, ";
-  //std::cout << "Ep,";
-  //std::cout << "num,";
-  //std::cout << "nuzp,";
-  //std::cout << "nupp,";
-  //std::cout << "Gzp,";
-  //std::cout << "Vf,";
-  //std::cout << "am,";
-  //std::cout << "afzz,";
-  //std::cout << "afpp";
-  //std::cout << '}';
-  //std::cout << "=";
-  //std::cout << '{';
-  //std::cout << std::setprecision(16);
-  //std::cout << deltaT << ',';
-  //std::cout << Em << ',';
-  //std::cout << Ez << ',';
-  //std::cout << Ep << ',';
-  //std::cout << num << ',';
-  //std::cout << nuzp << ',';
-  //std::cout << nupp << ',';
-  //std::cout << Gzp << ',';
-  //std::cout << Vf << ',';
-  //std::cout << am << ',';
-  //std::cout << afzz << ',';
-  //std::cout << afpp;
-  //std::cout << '}';
-  //std::cout << std::endl;
+#if 1
+  std::cout << '{';
+  std::cout << "deltaT, ";
+  std::cout << "Em, ";
+  std::cout << "Ez, ";
+  std::cout << "Ep,";
+  std::cout << "num,";
+  std::cout << "nuzp,";
+  std::cout << "nupp,";
+  std::cout << "Gzp,";
+  std::cout << "Vf,";
+  std::cout << "am,";
+  std::cout << "afzz,";
+  std::cout << "afpp";
+  std::cout << '}';
+  std::cout << "=";
+  std::cout << '{';
+  std::cout << std::setprecision(16);
+  std::cout << deltaT << ',';
+  std::cout << Em << ',';
+  std::cout << Ez << ',';
+  std::cout << Ep << ',';
+  std::cout << num << ',';
+  std::cout << nuzp << ',';
+  std::cout << nupp << ',';
+  std::cout << Gzp << ',';
+  std::cout << Vf << ',';
+  std::cout << am << ',';
+  std::cout << afzz << ',';
+  std::cout << afpp;
+  std::cout << '}';
+  std::cout << std::endl;
+#endif
 
   auto sigma_original = RotatedFiberComposite3D_Original(
     x, du_dx, alpha0, deltaT, 
