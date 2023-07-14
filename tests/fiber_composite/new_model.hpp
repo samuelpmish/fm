@@ -136,7 +136,7 @@ struct RotatedFiberCompositeModel {
     using std::sin, std::cos, std::atan, std::acos, std::sqrt;
     vec3 center = {0,0,0};
     auto r = x - center; 
-    auto Theta = (cylindrical_domain) * M_PI_2 - std::atan(r[1]/r[0]);
+    auto Theta = (cylindrical_domain) * (M_PI_2 - std::atan(r[1]/r[0]));
 
     auto sT = sin(Theta);
     auto cT = cos(Theta);
