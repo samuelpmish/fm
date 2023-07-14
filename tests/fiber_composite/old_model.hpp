@@ -1,5 +1,9 @@
 #pragma once
 
+#include "fm.hpp"
+#include "operations/dot.hpp"
+#include "operations/linear_solve.hpp"
+
 template<typename xType, 
          typename dispType,
          typename AngleType,
