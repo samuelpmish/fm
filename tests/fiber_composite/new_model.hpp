@@ -104,6 +104,8 @@ struct RotatedFiberCompositeModel {
       mat<6,6,double> Emat = Vm * dot(transpose(Bmat), dot(inv(Jmat), Bmat));
       Emat[2][2] += Vf * Ez;
 
+      // TODO: Hashin correction to Emat[4:6, 4:6]
+
       return Emat;
     }
 
@@ -118,11 +120,10 @@ struct RotatedFiberCompositeModel {
            typename dispType,
            typename AngleType,
            typename TemperatureType>
-  auto operator()(
-    const xType &x, 
-    const dispType &du_dx,
-    const AngleType &Alpha0,
-    const TemperatureType &deltaT) {
+  auto operator()(const xType &x, 
+                  const dispType &du_dx,
+                  const AngleType &Alpha0,
+                  const TemperatureType &deltaT) {
 
     auto cte = thermal_expansion_coefficients;
 
