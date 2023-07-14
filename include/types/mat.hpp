@@ -22,6 +22,8 @@ using mat2 = mat<2, 2, double>;
 using mat3f = mat<3, 3, float>;
 using mat3 = mat<3, 3, double>;
 
+using mat6 = mat<6, 6, double>;
+
 template <uint32_t m, uint32_t n, typename T>
 constexpr auto transpose(const mat<m, n, T>& A) {
   mat<n, m, T> AT{};

@@ -9,6 +9,9 @@
 
 #include "fiber_composite/model.hpp"
 
+#define ANKERL_NANOBENCH_IMPLEMENT
+#include "nanobench.h"
+
 using vec6 = vec<6, double>;
 
 vec6 voigt(const mat3 & A) {
@@ -22,6 +25,165 @@ mat3 voigt(const vec6 & v) {
     {v[4], v[3], v[2]}
   }};
 }
+
+struct RotatedFiberCompositeModel {
+
+  struct Parameters {
+    double Em;
+    double Ez;
+    double Ep;
+    double num;
+    double nuzp;
+    double nupp;
+    double Gzp;
+    double Vf;
+    double am;
+    double afzz;
+    double afpp;
+    bool thermalStress;
+    bool cylDom;
+
+    vec3 compute_thermal_expansion_coefficients() {
+
+      if (thermalStress) {
+
+        double Vm = 1.0 - Vf;
+
+        double s0 = Vf/Ep - (nuzp*nuzp*Vf)/Ez + (Vm - num*num*Vm)/Em;
+        double s1 = -((nupp*Vf)/Ep) - (nuzp*nuzp*Vf)/Ez - (num*(1 + num)*Vm)/Em;
+        mat2 Stildbar = {{{s0, s1}, {s1, s0}}};
+
+        vec2 Dtildn = {nuzp * Vf + num * Vm, nuzp * Vf + num * Vm};
+        vec2 Btildbar = {nuzp * Vf + num * Vm, nuzp * Vf + num * Vm}; // the same as Dtildn?
+        vec2 alphatildbar = {afpp * Vf + afzz * nuzp * Vf + am * (1 + num) * Vm, afpp * Vf + afzz * nuzp * Vf + am * (1 + num) * Vm};
+
+        mat2 C22 = inv(Stildbar);
+        vec2 C12 = dot(Dtildn, C22);
+        vec2 C21 = dot(C22, Btildbar);
+        double C11 = Em*Vm + Ez*Vf + dot(Dtildn, C12);
+
+        mat3 Ceff = {{
+          {C11,    C12[0],    C12[1]},
+          {C21[0], C22[0][0], C22[0][1]},
+          {C21[1], C22[1][0], C22[1][1]}
+        }};
+
+        double alpha1 = Em*Vm*am + Ez*Vf*afzz + dot(Dtildn, alphatildbar);
+        vec2 alpha2 = dot(C22, alphatildbar);
+
+        vec3 alphabar = {alpha1, alpha2[0], alpha2[1]};
+
+        return linear_solve(Ceff, alphabar);
+
+      } else {
+
+        return vec3{};
+
+      }
+
+    }
+
+    mat<6,6,double> compute_stiffness_tensor() {
+      auto Vm = 1-Vf; // volume fraction
+
+      double j1 = 1.0/Em + (Vf/Vm)*(1.0/Ep - nuzp*nuzp/Ez);
+      double j2 = -num/Em - (Vf/Vm)*(nupp/Ep + nuzp*nuzp/Ez);
+      double j3 = 2.0 * ((1.0+num)/Em + (Vf/Vm)*(1.0/(2.0*Gzp)));
+      double j4 = 2.0 * ((1.0+num)/Em + (Vf/Vm)*(1.0+nupp)/Ep);
+
+      mat<6,6,double> Jmat = {{
+        {       j1,         j2,  -num / Em,  0.0, 0.0, 0.0},
+        {       j2,         j1,  -num / Em,  0.0, 0.0, 0.0},
+        {-num / Em, - num / Em,   1.0 / Em,  0.0, 0.0, 0.0},
+        {      0.0,        0.0,        0.0,   j3, 0.0, 0.0},
+        {      0.0,        0.0,        0.0,  0.0,  j3, 0.0},
+        {      0.0,        0.0,        0.0,  0.0, 0.0,  j4}
+      }};
+
+      mat<6,6,double> Bmat = {{
+        {1.0 / Vm,    0.0  , (Vf/Vm)*nuzp,    0.0  ,    0.0  ,    0.0  },
+        {     0.0, 1.0 / Vm, (Vf/Vm)*nuzp,    0.0  ,    0.0  ,    0.0  },
+        {     0.0,    0.0  ,      1.0    ,    0.0  ,    0.0  ,    0.0  },  
+        {     0.0,    0.0  ,      0.0    , 1.0 / Vm,    0.0  ,    0.0  },
+        {     0.0,    0.0  ,      0.0    ,    0.0  , 1.0 / Vm,    0.0  },
+        {     0.0,    0.0  ,      0.0    ,    0.0  ,    0.0  , 1.0 / Vm}
+      }};
+
+      mat<6,6,double> Emat = Vm * dot(transpose(Bmat), dot(inv(Jmat), Bmat));
+      Emat[2][2] += Vf * Ez;
+
+      return Emat;
+    }
+
+  };
+
+  RotatedFiberCompositeModel(Parameters p) :
+    cylindrical_domain(p.cylDom),
+    stiffness_tensor(p.compute_stiffness_tensor()),
+    thermal_expansion_coefficients(p.compute_thermal_expansion_coefficients()) {}
+
+  template<typename xType, 
+           typename dispType,
+           typename AngleType,
+           typename TemperatureType>
+  auto operator()(
+    const xType &x, 
+    const dispType &du_dx,
+    const AngleType &Alpha0,
+    const TemperatureType &deltaT) {
+
+    auto cte = thermal_expansion_coefficients;
+
+    mat<3,3,TemperatureType> thermal_strain = {{
+      {cte[0] * deltaT,             0.0,             0.0},
+      {            0.0, cte[1] * deltaT,             0.0},
+      {            0.0,             0.0, cte[2] * deltaT}
+    }};
+
+    // Compute rotation matrices
+    using std::sin, std::cos, std::atan, std::acos, std::sqrt;
+    vec3 center = {0,0,0};
+    auto r = x - center; 
+    auto Theta = (cylindrical_domain) * M_PI_2 - std::atan(r[1]/r[0]);
+
+    auto sT = sin(Theta);
+    auto cT = cos(Theta);
+    auto sA0 = sin(Alpha0);
+    auto Alpha = acos((2.0*sA0*sT) / (sqrt(1.0 + 4.0*sA0*sA0*sT*sT))); // Dan's expression
+    auto sA = sin(Alpha);
+    auto cA = cos(Alpha);
+
+    mat3 R = {{
+      {cA*cT, -sT, cT*sA},
+      {cA*sT,  cT, sA*sT},
+      {  -sA,   0,    cA}
+    }};
+
+    vec6 wv{1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f};
+
+    auto strain = 0.5 * (du_dx + transpose(du_dx)) + thermal_strain;
+
+    // dot(transpose(Rv), eps_v) is equivalent to:
+    // 1. eps := voigt(eps_v / wv)
+    // 2. eps := dot(transpose(R), eps, R)
+    // 3. eps_v := wv * voigt(eps)
+    strain = dot(transpose(R), dot(strain, R));
+
+    auto stress = voigt(dot(stiffness_tensor, wv * voigt(strain)));
+
+    // dot(Rv, sigma_v) is equivalent to:
+    // 1. sigma := voigt(sigma_v)
+    // 2. sigma := dot(R, sigma, transpose(R))
+    // 3. sigma_v := voigt(sigma) (note: unused here)
+    return dot(R, dot(stress, transpose(R)));
+
+  }
+
+  bool cylindrical_domain;
+  mat6 stiffness_tensor; // in voigt notation
+  vec3 thermal_expansion_coefficients; 
+
+};
 
 template<typename xType, 
          typename dispType,
@@ -42,142 +204,31 @@ auto RotatedFiberComposite3D_New(
     // updated with a permutation matrix to match the standard Voigt notation)
     auto Vm = 1-Vf; // Matrix volume fraction
 
-    mat<6,6,double> Jmat{};
-    Jmat[0][0] = 1.0/Em;
-    Jmat[0][1] = -num/Em;
-    Jmat[0][2] = Jmat[0][1];
-    Jmat[1][0] =  Jmat[0][1];
-    Jmat[1][1] = 1.0/Em + (Vf/Vm)*(1.0/Ep - nuzp*nuzp/Ez);
-    Jmat[1][2] = -num/Em - (Vf/Vm)*(nupp/Ep + nuzp*nuzp/Ez);
-    Jmat[2][0] = Jmat[0][2];
-    Jmat[2][1] = Jmat[1][2];
-    Jmat[2][2] = Jmat[1][1];
-    Jmat[3][3] = (1.0+num)/Em + (Vf/Vm)*(1.0+nupp)/Ep;
-    Jmat[4][4] = (1.0+num)/Em + (Vf/Vm)*(1.0/(2.0*Gzp));
-    Jmat[5][5] = Jmat[4][4];
+    double j1 = 1.0/Em + (Vf/Vm)*(1.0/Ep - nuzp*nuzp/Ez);
+    double j2 = -num/Em - (Vf/Vm)*(nupp/Ep + nuzp*nuzp/Ez);
+    double j3 = 2.0 * ((1.0+num)/Em + (Vf/Vm)*(1.0/(2.0*Gzp)));
+    double j4 = 2.0 * ((1.0+num)/Em + (Vf/Vm)*(1.0+nupp)/Ep);
 
-    std::cout << std::setprecision(16);
-    std::cout << "Jmat: " << Jmat << std::endl;
+    mat<6,6,double> Jmat = {{
+      {       j1,         j2,  -num / Em,  0.0, 0.0, 0.0},
+      {       j2,         j1,  -num / Em,  0.0, 0.0, 0.0},
+      {-num / Em, - num / Em,   1.0 / Em,  0.0, 0.0, 0.0},
+      {      0.0,        0.0,        0.0,   j3, 0.0, 0.0},
+      {      0.0,        0.0,        0.0,  0.0,  j3, 0.0},
+      {      0.0,        0.0,        0.0,  0.0, 0.0,  j4}
+    }};
 
-    auto Dmat = inv(Jmat);
+    mat<6,6,double> Bmat = {{
+      {1.0 / Vm,    0.0  , (Vf/Vm)*nuzp,    0.0  ,    0.0  ,    0.0  },
+      {     0.0, 1.0 / Vm, (Vf/Vm)*nuzp,    0.0  ,    0.0  ,    0.0  },
+      {     0.0,    0.0  ,      1.0    ,    0.0  ,    0.0  ,    0.0  },  
+      {     0.0,    0.0  ,      0.0    , 1.0 / Vm,    0.0  ,    0.0  },
+      {     0.0,    0.0  ,      0.0    ,    0.0  , 1.0 / Vm,    0.0  },
+      {     0.0,    0.0  ,      0.0    ,    0.0  ,    0.0  , 1.0 / Vm}
+    }};
 
-    std::cout << std::setprecision(16);
-    std::cout << "Dmat: " << Dmat << std::endl;
-
-    mat<6,6,double> Bmat{};
-    Bmat[0][0] = 1.0;
-    Bmat[1][0] = (Vf/Vm)*nuzp;
-    Bmat[2][0] = Bmat[1][0];
-    Bmat[1][1] = (1.0/Vm);
-    Bmat[2][2] = (1.0/Vm);
-    Bmat[3][3] = (1.0/Vm);
-    Bmat[4][4] = (1.0/Vm);
-    Bmat[5][5] = (1.0/Vm);
-
-    std::cout << std::setprecision(16);
-    std::cout << "Bmat: " << Bmat << std::endl;
-
-    vec<6, double> xivec{};
-    xivec[1] = nuzp;
-    xivec[2] = nuzp;
-
-    mat<6, 6, double> Emat{};
-    auto partialxivec = make_vec<5>([&](int i) { return xivec[i+1]; });
-    auto partialDmat2 = make_vec<6>([&](int i) { return Dmat[0][i]; });
-    auto partialBmat1 = make_vec<6>([&](int i) { return Bmat[i][0]; });
-    auto partialDmat1 = make_mat<5, 6>([&](auto i, auto j) { return Dmat[i+1][j]; });
-    auto partialBmat2 = make_mat<6, 5>([&](auto i, auto j) { return Bmat[i][j+1]; });
-
-    // compute Emat[0][0] = Vf * (Ez + xivec(2:6) * Dmat(2:6,:) * Bmat(:,1)) + Vm * Dmat(1,:) * Bmat(:,1);
-    Emat[0][0] = Vf *  (Ez + dot(partialxivec, dot(partialDmat1, partialBmat1))) + Vm * dot(partialDmat2, partialBmat1);
-    // compute Emat[0][1:5] = (Vf * xivec(2:6) * Dmat(2:6,:) + Vm * Dmat(1,:)) * Bmat(:,2:6);
-    auto temp1vec =  dot(Vf * dot(partialxivec, partialDmat1) + Vm * partialDmat2, partialBmat2);
-    for ( int i=0; i<5; i++)
-    {
-        Emat[0][i+1] = temp1vec[i];
-    }
-    // Emat[1:5][:] = Dmat(2:6,:) * Bmat(:,:);
-    auto temp1mat = dot(partialDmat1, Bmat);
-    for ( int i=0; i<5; i++) {
-      for ( int j=0; j<6; j++) {
-        Emat[i+1][j] = temp1mat[i][j];
-      }
-    }
-
-    std::cout << std::setprecision(16);
-    std::cout << "Emat: " << Emat << std::endl;
-
-    // Compute compliance
-    auto Smat = inv(Emat);
-
-    // Effective ply properties
-    double G23  = 1.0 / (2.0*Smat[3][3]);
-    double G13c = 1.0 / (2.0*Smat[4][4]);
-    double G12c = 1.0 / (2.0*Smat[5][5]);
-
-    double G12 = G12c;
-    double G13 = G13c;
-
-    // Correct G12 and G13 according to Hashin's estimate
-    bool useHashinEstimate(false);
-    if (useHashinEstimate) {
-      double Gm = Em / (2.0 * (1.0 + num));
-      double G12h = Gm * (Gm * Vm + Gzp * (1.0 + Vf)) / (Gm * (1.0 + Vf) + Gzp * Vm);
-
-      // Take average of consistent and Hashin's shear moduli
-      G12 = (G12c + G12h) / 2.0;
-      G13 = (G13c + G12h) / 2.0;
-
-      // Replace ply terms with correct shear terms
-      // Note: no longer reordering like in LARCH:
-      // Order used in this function: 11 22 33 23 31 12
-      // Order that LARCH changes to (but not here): 33 11 22 12 23 31
-      Smat[3][3] = 1.0/(2.0*G23); // In LARCH: 1.0/(2.0*G12);
-      Smat[4][4] = 1.0/(2.0*G13); // In LARCH: 1.0/(2.0*G23);
-      Smat[5][5] = 1.0/(2.0*G12); // In LARCH: 1.0/(2.0*G13);
-    }
-
-    // Compute the stiffness tensor of the ply from the compliance
-    auto CPlyMat = inv(Smat); // either Smat or SPlyMat (they are the same)
-
-    // NOTE: Despite LARCH documentation states that the order for the first
-    // group of computations is zz, xx, yy, xz, xy, yz, the Matlab implementation
-    // is actually xx yy zzm xy yz xz. Hence, we need to permute the stiffness tensor by
-    // computing Qinv * C * S, where sigma_voigt = Q * sigma_larch; and S transforms the
-    // shear components from strain to eng strain (standard voigt notation)
-    mat<6,6,AngleType> SvMat{};
-    SvMat[0][2] = 1.0;
-    SvMat[1][0] = 1.0;
-    SvMat[2][1] = 1.0;
-    SvMat[3][5] = 1.0;
-    SvMat[4][3] = 1.0;
-    SvMat[5][4] = 1.0;
-
-    mat<6,6,AngleType> QvMat{};
-    QvMat[0][2] = 1.0;
-    QvMat[1][0] = 1.0;
-    QvMat[2][1] = 1.0;
-    QvMat[3][5] = 0.5;
-    QvMat[4][3] = 0.5;
-    QvMat[5][4] = 0.5;
-
-    auto reOrdCPlyMat = dot(transpose(SvMat), dot(CPlyMat, QvMat));
-
-    std::cout << std::setprecision(16);
-    std::cout << "reOrdCPlyMat: " << reOrdCPlyMat << std::endl;
-
-    //// -----------------------
-
-    // Compute rotation matrices
-    using std::sin, std::cos, std::atan, std::acos, std::sqrt;
-    double Xcenter = 0.0, Ycenter = 0.0;
-    auto Xdist = x[0]-Xcenter;
-    auto Ydist = x[1]-Ycenter;
-
-    auto Theta = M_PI_2 - std::atan(Ydist/Xdist); // std::atan(Ydist/Xdist);
-    if (!cylDom) {
-      Theta = 0.0;
-    }
+    mat<6,6,double> Emat = Vm * dot(transpose(Bmat), dot(inv(Jmat), Bmat));
+    Emat[2][2] += Vf * Ez;
 
     // For more details on variable names and operations, see the homogenize.py file of the LARCH code.
     mat<3, 3, TemperatureType > thermal_strain{};
@@ -215,9 +266,13 @@ auto RotatedFiberComposite3D_New(
 
     }
 
-    vec6 wv{1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f};
+    // Compute rotation matrices
+    using std::sin, std::cos, std::atan, std::acos, std::sqrt;
+    double Xcenter = 0.0, Ycenter = 0.0;
+    auto Xdist = x[0]-Xcenter;
+    auto Ydist = x[1]-Ycenter;
 
-    auto strain = 0.5 * (du_dx + transpose(du_dx)) + thermal_strain;
+    auto Theta = (cylDom) * M_PI_2 - std::atan(Ydist/Xdist);
 
     auto sT = sin(Theta);
     auto cT = cos(Theta);
@@ -232,13 +287,17 @@ auto RotatedFiberComposite3D_New(
       {  -sA,   0,    cA}
     }};
 
+    vec6 wv{1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f};
+
+    auto strain = 0.5 * (du_dx + transpose(du_dx)) + thermal_strain;
+
     // dot(transpose(Rv), eps_v) is equivalent to:
     // 1. eps := voigt(eps_v / wv)
     // 2. eps := dot(transpose(R), eps, R)
     // 3. eps_v := wv * voigt(eps)
     strain = dot(transpose(R), dot(strain, R));
 
-    auto stress = voigt(dot(reOrdCPlyMat, wv * voigt(strain)));
+    auto stress = voigt(dot(Emat, wv * voigt(strain)));
 
     // dot(Rv, sigma_v) is equivalent to:
     // 1. sigma := voigt(sigma_v)
@@ -248,21 +307,6 @@ auto RotatedFiberComposite3D_New(
 
 };
 
-struct ModelParameters {
-  double Em;
-  double Ez;
-  double Ep;
-  double num;
-  double nuzp;
-  double nupp;
-  double Gzp;
-  double Vf;
-  double am;
-  double afzz;
-  double afpp;
-  bool thermalStress;
-  bool cylDom;
-};
 
 void run_test() {
 
@@ -284,7 +328,9 @@ void run_test() {
   bool thermalStress = true;
   bool cylDom = true;
 
-#if 1
+  ankerl::nanobench::Bench bench;
+
+#if 0
   std::cout << '{';
   std::cout << "deltaT, ";
   std::cout << "Em, ";
@@ -318,15 +364,21 @@ void run_test() {
   std::cout << std::endl;
 #endif
 
-  auto sigma_original = RotatedFiberComposite3D_Original(
-    x, du_dx, alpha0, deltaT, 
-    Em, Ez, Ep,
-    num, nuzp, nupp,
-    Gzp, Vf,
-    am, afzz, afpp,
-    thermalStress, cylDom
-  );
+  mat3 sigma_original;
+  mat3 sigma_new;
 
+  bench.run("original", [&] {
+    sigma_original = RotatedFiberComposite3D_Original(
+      x, du_dx, alpha0, deltaT, 
+      Em, Ez, Ep,
+      num, nuzp, nupp,
+      Gzp, Vf,
+      am, afzz, afpp,
+      thermalStress, cylDom
+    );
+    ankerl::nanobench::doNotOptimizeAway(sigma_original);
+  });
+#if 0
   auto sigma_new = RotatedFiberComposite3D_New(
     x, du_dx, alpha0, deltaT, 
     Em, Ez, Ep,
@@ -335,13 +387,25 @@ void run_test() {
     am, afzz, afpp,
     thermalStress, cylDom
   );
+#else
+  RotatedFiberCompositeModel model({
+    Em, Ez, Ep,
+    num, nuzp, nupp,
+    Gzp, Vf,
+    am, afzz, afpp,
+    thermalStress, cylDom
+  });
 
-  compare(sigma_original, sigma_new, 5 * eps);
+  bench.run("new", [&] {
+    sigma_new = model(x, du_dx, alpha0, deltaT);
+    ankerl::nanobench::doNotOptimizeAway(sigma_new);
+  });
+#endif
+
+  compare(sigma_original, sigma_new, 1e-13);
 
 }
 
 int main() {
-  for (int i = 0; i < 1; i++) {
-    run_test();
-  }
+  run_test();
 }

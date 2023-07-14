@@ -12,7 +12,7 @@ template < uint32_t m, uint32_t n, typename T >
 void compare(const mat<m,n,T> & A, const mat<m,n,T> & B, double tolerance = eps) {
   for (uint32_t i = 0; i < m; i++) {
     for (uint32_t j = 0; j < n; j++) {
-      EXPECT_NEAR(A[i][j], B[i][j], tolerance * std::max(0.1, abs(A[i][j]) + abs(B[i][j])));
+      EXPECT_NEAR(A[i][j], B[i][j], tolerance * std::max(0.01, abs(A[i][j]) + abs(B[i][j])));
     }
   }
 }
