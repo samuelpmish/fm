@@ -79,6 +79,4 @@ TEST(UnitTest, sym6) {
 
   EXPECT_EQ(A6(0,0) + A6(1,0) + A6(2, 0), 6);
 
-  
-
 }
