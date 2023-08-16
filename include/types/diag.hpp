@@ -1,7 +1,13 @@
 #pragma once
 
 template < uint32_t dim, typename T = float >
-struct diag { vec< dim, T > data; };
+struct diag { 
+  using data_type = T;
+  static constexpr int dimensions[2] = {dim,dim};
+  static constexpr fm::type type = fm::type::diag;
+
+  vec< dim, T > data; 
+};
 
 template < uint32_t dim, typename T = float >
 diag(vec<dim, T>) -> diag<dim, T>;

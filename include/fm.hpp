@@ -2,6 +2,10 @@
 
 #include <cinttypes>
 
+namespace fm {
+  enum class type { vec, iso, mat, sym, diag, skew, ortho };
+}
+
 #include "types/vec.hpp"
 #include "types/iso.hpp"
 #include "types/mat.hpp"

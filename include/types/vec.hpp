@@ -4,7 +4,11 @@
 
 template < uint32_t dim, typename T = float >
 struct vec { 
-  T data[dim]; 
+  using data_type = T;
+  static constexpr int dimension = dim;
+  static constexpr fm::type type = fm::type::vec;
+
+  T data[dim];
 
   T & operator[](uint32_t i) { return data[i]; }
   const T & operator[](uint32_t i) const { return data[i]; }
@@ -21,6 +25,14 @@ using vec2 = vec<2, double>;
 
 using vec3f = vec<3, float>;
 using vec3 = vec<3, double>;
+
+template < uint32_t dim, typename S, typename T >
+constexpr auto operator!=(const vec< dim, S > & u, const vec< dim, T > & v) {
+  for (int i = 0; i < dim; i++) {
+    if (u[i] != v[i]) return true;
+  }
+  return false;
+}
 
 template < uint32_t dim, typename S, typename T >
 constexpr auto operator==(const vec< dim, S > & u, const vec< dim, T > & v) {

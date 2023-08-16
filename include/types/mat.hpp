@@ -4,6 +4,10 @@
 
 template < uint32_t nrows, uint32_t ncols, typename T = float >
 struct mat { 
+  using data_type = T;
+  static constexpr int dimensions[2] = {nrows,ncols};
+  static constexpr fm::type type = fm::type::mat;
+
   vec<ncols, T> data[nrows];
 
   auto & operator[](uint32_t i) { return data[i]; }
@@ -23,6 +27,22 @@ using mat3f = mat<3, 3, float>;
 using mat3 = mat<3, 3, double>;
 
 using mat6 = mat<6, 6, double>;
+
+template < uint32_t m, uint32_t n, typename S, typename T >
+constexpr auto operator!=(const mat< m, n, S > & u, const mat< m, n, T > & v) {
+  for (int i = 0; i < m; i++) {
+    if (u[i] != v[i]) return true;
+  }
+  return false;
+}
+
+template < uint32_t m, uint32_t n, typename S, typename T >
+constexpr auto operator==(const mat< m, n, S > & u, const mat< m, n, T > & v) {
+  for (int i = 0; i < m; i++) {
+    if (u[i] != v[i]) return false;
+  }
+  return true;
+}
 
 template <uint32_t m, uint32_t n, typename T>
 constexpr auto transpose(const mat<m, n, T>& A) {

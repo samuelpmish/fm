@@ -5,12 +5,20 @@ struct ortho;
 
 template < typename T >
 struct ortho< 2, T > {
+  using data_type = T;
+  static constexpr int dimensions[2] = {2, 2};
+  static constexpr fm::type type = fm::type::ortho;
+
   T c;
   T s;
 };
 
 template < typename T >
 struct ortho< 3, T > {
+  using data_type = T;
+  static constexpr int dimensions[2] = {3, 3};
+  static constexpr fm::type type = fm::type::ortho;
+
   T c;
   vec< 3, T > s;
 };
