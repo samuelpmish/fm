@@ -177,4 +177,3 @@ struct RotatedFiberCompositeModel {
   vec3 thermal_expansion_coefficients; 
 
 };
-

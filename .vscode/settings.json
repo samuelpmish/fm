@@ -1,6 +1,7 @@
 {
     "cmake.configureArgs": [
-        "-DFM_ENABLE_TESTING=ON"
+        "-DFM_ENABLE_TESTING=ON",
+        "-DCMAKE_CXX_FLAGS=-ftime-trace"
     ],
     "cmake.configureOnOpen": true,
     "files.associations": {
