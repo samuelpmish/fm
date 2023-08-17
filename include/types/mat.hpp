@@ -47,8 +47,8 @@ constexpr auto operator==(const mat< m, n, S > & u, const mat< m, n, T > & v) {
 template <uint32_t m, uint32_t n, typename T>
 constexpr auto transpose(const mat<m, n, T>& A) {
   mat<n, m, T> AT{};
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < m; j++) {
+  for (uint32_t i = 0; i < n; i++) {
+    for (uint32_t j = 0; j < m; j++) {
       AT[i][j] = A[j][i];
     }
   }
@@ -100,29 +100,39 @@ constexpr mat<3, 3, T> inv(const mat<3, 3, T>& A) {
   return invA;
 }
 
-template <typename T, int n>
+template <typename T, uint32_t n>
 constexpr T tr(const mat<n, n, T>& A) {
   T trA{};
-  for (int i = 0; i < n; i++) {
+  for (uint32_t i = 0; i < n; i++) {
     trA = trA + A(i,i);
   }
   return trA;
 }
  
-template <typename T, int n>
+template <typename T, uint32_t n>
 constexpr auto dev(const mat<n, n, T>& A) {
   auto devA = A;
   auto trA = tr(A);
-  for (int i = 0; i < n; i++) {
+  for (uint32_t i = 0; i < n; i++) {
     devA(i,i) -= trA / n;
   }
   return devA;
 }
 
+template < uint32_t m, uint32_t n, typename T >
+constexpr void operator+=(mat< m, n, T > & A, const mat< m, n, T > & B) {
+  for (uint32_t i = 0; i < m; i++) A[i] += B[i];
+}
+
+template < uint32_t m, uint32_t n, typename T >
+constexpr void operator*=(mat< m, n, T > & A, const T & scale) {
+  for (uint32_t i = 0; i < m; i++) A[i] *= scale;
+}
+
 template < uint32_t m, uint32_t n, typename S, typename T >
 constexpr auto operator+(const mat< m, n, S > & A, const mat< m, n, T > & B) {
   mat< m, n, decltype(S{} + T{}) > out{};
-  for (int i = 0; i < m; i++) {
+  for (uint32_t i = 0; i < m; i++) {
     out[i] = A[i] + B[i];
   }
   return out; 
@@ -131,7 +141,7 @@ constexpr auto operator+(const mat< m, n, S > & A, const mat< m, n, T > & B) {
 template < uint32_t m, uint32_t n, typename T >
 constexpr auto operator*(const double & scale, const mat< m, n, T > & A) {
   mat< m, n, T > out{};
-  for (int i = 0; i < m; i++) {
+  for (uint32_t i = 0; i < m; i++) {
     out[i] = scale * A[i];
   }
   return out; 

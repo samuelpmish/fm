@@ -14,4 +14,7 @@ namespace fm {
 #include "types/skew.hpp"
 #include "types/ortho.hpp"
 
+#include "operations/dot.hpp"
+#include "operations/outer.hpp"
 #include "operations/diag_iso.hpp"
+#include "operations/linear_solve.hpp"
