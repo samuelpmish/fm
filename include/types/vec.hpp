@@ -64,7 +64,7 @@ template < uint32_t dim, typename T >
 constexpr auto operator-(const vec< dim, T > & v) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
-    out[i] = -out[i];
+    out[i] = -v[i];
   }
   return out; 
 }
@@ -95,6 +95,7 @@ constexpr auto operator/(const vec< dim, S > & u, const vec< dim, T > & v) {
   }
   return out; 
 }
+
 
 
 ////
@@ -148,3 +149,11 @@ constexpr auto normalize(const vec< dim, T > & v) {
   return (v / norm(v));
 }
 
+template < uint32_t dim, typename S, typename T >
+constexpr auto dot(const vec< dim, S > & u, const vec< dim, T > & v) {
+  decltype(S{} / T{}) total{};
+  for (uint32_t i = 0; i < dim; i++) {
+    total += u[i] * v[i];
+  }
+  return total;
+}

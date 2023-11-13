@@ -4,6 +4,8 @@
 
 #include "types/vec.hpp"
 
+#include <algorithm>
+
 namespace fm {
 
 template < typename T >
@@ -76,7 +78,7 @@ struct matrix<Kind::Skew, 3, 3, T> {
                                        1 * (i == 1) & (j == 2) +
                                        2 * (i == 1) & (j == 2)];
   }
-  T data[3];
+  vec<3,T> data;
 };
 
 template < u32 dim, typename T >
@@ -108,8 +110,18 @@ struct matrix<Kind::Rotation, 3, 3, T> {
   using type = T;
   static constexpr u32 nrows() { return 3; }
   static constexpr u32 ncols() { return 3; }
-  constexpr const auto & operator()(u32 i, u32 j) const { 
-    static_assert(always_false<T>{}, "unimplemented");
+  constexpr const auto operator()(u32 i, u32 j) const { 
+    if (i == 0 && j == 0) return 1-2*(s[1]*s[1]+s[2]*s[2]);
+    if (i == 0 && j == 1) return   2*(s[0]*s[1]-   c*s[2]);
+    if (i == 0 && j == 2) return   2*(s[0]*s[2]+   c*s[1]);
+    if (i == 1 && j == 0) return   2*(s[0]*s[1]+   c*s[2]);
+    if (i == 1 && j == 1) return 1-2*(s[0]*s[0]+s[2]*s[2]);  
+    if (i == 1 && j == 2) return   2*(s[1]*s[2]-   c*s[0]);
+    if (i == 2 && j == 0) return   2*(s[0]*s[2]-   c*s[1]); 
+    if (i == 2 && j == 1) return   2*(s[1]*s[2]+   c*s[0]);
+    if (i == 2 && j == 2) return 1-2*(s[0]*s[0]+s[1]*s[1]);
+
+    return 0.0;
   }
 
   constexpr operator matrix<Kind::General, 3, 3, T>() {
@@ -121,15 +133,24 @@ struct matrix<Kind::Rotation, 3, 3, T> {
   }
 
   T c;
-  T s[3];
+  vec<3,T> s;
 };
 
+template < u32 dim, typename T >
+using rot = matrix<Kind::Rotation, dim, dim, T>;
 using rot2 = matrix<Kind::Rotation, 2, 2, double>;
 using rot3 = matrix<Kind::Rotation, 3, 3, double>;
 
 template < typename T >
 matrix<Kind::Rotation, 2, 2, T> RotationMatrix(T angle) {
-  return {cos(angle * 0.5), sin(angle * 0.5)};
+  return {cos(angle), sin(angle)};
+}
+
+template < typename T >
+rot<3,T> RotationMatrix(const vec<3,T> & axis_angle) {
+  T theta = norm(axis_angle);
+  vec<3,T> normalized_axis = axis_angle / theta;
+  return {std::cos(theta / 2), std::sin(theta / 2) * normalized_axis};
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -55,12 +55,12 @@ constexpr auto inv(const matrix<kind, dim, dim, T> & A) {
       auto inv_detA = 1.0 / det(A);
 
       matrix_type invA{};
-      invA(0,0) = (A[1][1] * A[2][2] - A[1][2] * A[2][1]) * inv_detA;
-      invA(0,1) = (A[0][2] * A[2][1] - A[0][1] * A[2][2]) * inv_detA;
-      invA(0,2) = (A[0][1] * A[1][2] - A[0][2] * A[1][1]) * inv_detA;
-      invA(1,1) = (A[0][0] * A[2][2] - A[0][2] * A[2][0]) * inv_detA;
-      invA(1,2) = (A[0][2] * A[1][0] - A[0][0] * A[1][2]) * inv_detA;
-      invA(2,2) = (A[0][0] * A[1][1] - A[0][1] * A[1][0]) * inv_detA;
+      invA(0,0) = (A(1,1) * A(2,2) - A(1,2) * A(2,1)) * inv_detA;
+      invA(0,1) = (A(0,2) * A(2,1) - A(0,1) * A(2,2)) * inv_detA;
+      invA(0,2) = (A(0,1) * A(1,2) - A(0,2) * A(1,1)) * inv_detA;
+      invA(1,1) = (A(0,0) * A(2,2) - A(0,2) * A(2,0)) * inv_detA;
+      invA(1,2) = (A(0,2) * A(1,0) - A(0,0) * A(1,2)) * inv_detA;
+      invA(2,2) = (A(0,0) * A(1,1) - A(0,1) * A(1,0)) * inv_detA;
       return invA;   
     }
 
