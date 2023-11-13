@@ -2,11 +2,10 @@
 
 #include <cmath>
 
-template < uint32_t dim, typename T = float >
+template < uint32_t dim, typename T = double >
 struct vec { 
   using data_type = T;
   static constexpr int dimension = dim;
-  static constexpr fm::type type = fm::type::vec;
 
   T data[dim];
 

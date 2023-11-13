@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-template < uint32_t dim, typename T = float >
+template < uint32_t dim, typename T = double >
 struct iso { 
   using data_type = T;
   static constexpr int dimensions[2] = {dim,dim};
@@ -29,6 +29,11 @@ auto operator-(const iso<dim, S> & A, const iso<dim, T> & B) {
 template < uint32_t dim, typename S, typename T >
 auto operator*(const iso<dim, S> & A, const iso<dim, T> & B) {
   return iso<dim>{A.data * B.data};
+}
+
+template < uint32_t dim, typename T >
+auto operator*(double scale, const iso<dim, T> & A) {
+  return iso<dim, T>{scale * A.data};
 }
 
 template < uint32_t dim, typename S, typename T >

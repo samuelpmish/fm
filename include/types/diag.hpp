@@ -1,6 +1,6 @@
 #pragma once
 
-template < uint32_t dim, typename T = float >
+template < uint32_t dim, typename T = double >
 struct diag { 
   using data_type = T;
   static constexpr int dimensions[2] = {dim,dim};

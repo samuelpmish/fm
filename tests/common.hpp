@@ -8,6 +8,8 @@
 static constexpr float eps = 1.0e-15;
 static constexpr float epsf = 1.0e-7f;
 
+namespace fm {
+
 template < uint32_t m, uint32_t n, typename T >
 void compare(const mat<m,n,T> & A, const mat<m,n,T> & B, double tolerance = eps) {
   for (uint32_t i = 0; i < m; i++) {
@@ -37,4 +39,6 @@ auto make_mat(callable f) {
     }
   }
   return output;
+}
+
 }

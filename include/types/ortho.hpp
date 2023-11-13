@@ -1,6 +1,6 @@
 #pragma once
 
-template < uint32_t dim, typename T >
+template < uint32_t dim, typename T = double >
 struct ortho;
 
 template < typename T >

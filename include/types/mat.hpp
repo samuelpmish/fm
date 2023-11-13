@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-template < uint32_t nrows, uint32_t ncols, typename T = float >
+template < uint32_t nrows, uint32_t ncols, typename T = double >
 struct mat { 
   using data_type = T;
   static constexpr int dimensions[2] = {nrows,ncols};
@@ -18,6 +18,16 @@ struct mat {
 
   auto & operator()(uint32_t i, uint32_t j) { return data[i][j]; }
   const auto & operator()(uint32_t i, uint32_t j) const { return data[i][j]; }
+
+//  operator sym<nrows,T>() {
+//    sym<n,T> output;
+//    for (uint32_t i = 0; i < n; i++) {
+//      for (uint32_t j = i; j < n; j++) {
+//        output(i,j) = (data[i][j] + data[j][i]) * 0.5;
+//      } 
+//    } 
+//    return output;
+//  }
 };
 
 using mat2f = mat<2, 2, float>;
@@ -53,51 +63,6 @@ constexpr auto transpose(const mat<m, n, T>& A) {
     }
   }
   return AT;
-}
-
-template <typename T>
-constexpr auto det(const mat<2, 2, T>& A) {
-  return A[0][0] * A[1][1] - A[0][1] * A[1][0];
-}
-
-template <typename T>
-constexpr auto det(const mat<3, 3, T>& A) {
-  return A[0][0] * A[1][1] * A[2][2] + A[0][1] * A[1][2] * A[2][0] +
-         A[0][2] * A[1][0] * A[2][1] - A[0][0] * A[1][2] * A[2][1] -
-         A[0][1] * A[1][0] * A[2][2] - A[0][2] * A[1][1] * A[2][0];
-}
-
-template <typename T>
-constexpr mat<2, 2, T> inv(const mat<2, 2, T>& A) {
-  T inv_detA(1.0 / det(A));
-
-  mat<2, 2, T> invA{};
-
-  invA[0][0] =  A[1][1] * inv_detA;
-  invA[0][1] = -A[0][1] * inv_detA;
-  invA[1][0] = -A[1][0] * inv_detA;
-  invA[1][1] =  A[0][0] * inv_detA;
-
-  return invA;
-}
-
-template < typename T >
-constexpr mat<3, 3, T> inv(const mat<3, 3, T>& A) {
-  auto inv_detA = 1.0 / det(A);
-
-  mat<3, 3, T> invA{};
-
-  invA[0][0] = (A[1][1] * A[2][2] - A[1][2] * A[2][1]) * inv_detA;
-  invA[0][1] = (A[0][2] * A[2][1] - A[0][1] * A[2][2]) * inv_detA;
-  invA[0][2] = (A[0][1] * A[1][2] - A[0][2] * A[1][1]) * inv_detA;
-  invA[1][0] = (A[1][2] * A[2][0] - A[1][0] * A[2][2]) * inv_detA;
-  invA[1][1] = (A[0][0] * A[2][2] - A[0][2] * A[2][0]) * inv_detA;
-  invA[1][2] = (A[0][2] * A[1][0] - A[0][0] * A[1][2]) * inv_detA;
-  invA[2][0] = (A[1][0] * A[2][1] - A[1][1] * A[2][0]) * inv_detA;
-  invA[2][1] = (A[0][1] * A[2][0] - A[0][0] * A[2][1]) * inv_detA;
-  invA[2][2] = (A[0][0] * A[1][1] - A[0][1] * A[1][0]) * inv_detA;
-
-  return invA;
 }
 
 template <typename T, uint32_t n>
