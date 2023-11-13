@@ -61,7 +61,7 @@ struct matrix<Kind::Skew, 2, 2, T> {
     return data * (i != j) * ((j > i) ? 1 : -1);
   }
 
-  constexpr operator matrix<Kind::General, 2, 2, T>() {
+  constexpr operator matrix<Kind::General, 2, 2, T>() const {
     return {{{0.0, data}, {-data, 0.0}}};
   }
 
@@ -78,6 +78,15 @@ struct matrix<Kind::Skew, 3, 3, T> {
                                        1 * (i == 1) & (j == 2) +
                                        2 * (i == 1) & (j == 2)];
   }
+
+  constexpr operator matrix<Kind::General, 3, 3, T>() const {
+    return {{
+      {     0.0,  data[0], data[1]}, 
+      {-data[0],      0.0, data[2]},
+      {-data[1], -data[2],     0.0}
+    }};
+  }
+
   vec<3,T> data;
 };
 
@@ -97,7 +106,7 @@ struct matrix<Kind::Rotation, 2, 2, T> {
     return (i == j) * c + (i32(i) - i32(j)) * s;
   }
 
-  constexpr operator matrix<Kind::General, 2, 2, T>() {
+  constexpr operator matrix<Kind::General, 2, 2, T>() const {
     return {{{c, -s}, {s, c}}};
   }
 
@@ -124,7 +133,7 @@ struct matrix<Kind::Rotation, 3, 3, T> {
     return 0.0;
   }
 
-  constexpr operator matrix<Kind::General, 3, 3, T>() {
+  constexpr operator matrix<Kind::General, 3, 3, T>() const {
     return {{
       {1-2*(s[1]*s[1]+s[2]*s[2]),   2*(s[0]*s[1]-   c*s[2]),   2*(s[0]*s[2]+   c*s[1])},
       {  2*(s[0]*s[1]+   c*s[2]), 1-2*(s[0]*s[0]+s[2]*s[2]),   2*(s[1]*s[2]-   c*s[0])},
@@ -171,7 +180,17 @@ struct matrix<Kind::Symmetric, dim, dim, T> {
     return j_upper + ((2 * dim - i_upper - 1) * i_upper) / 2;
   }
 
-  T data[num_values];
+  constexpr operator matrix<Kind::General, dim, dim, T>() const {
+    matrix<Kind::General, dim, dim, T> output;
+    for (u32 i = 0; i < dim; i++) {
+      for (u32 j = 0; j < dim; j++) {
+        output(i,j) = data[index(i,j)];
+      }
+    }
+    return output;
+  }
+
+  vec<num_values, T> data;
 };
 
 template < u32 n, typename T >

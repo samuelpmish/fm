@@ -22,6 +22,7 @@
 
 #include "operations/operator_overloads.hpp"
 
+#include "operations/dot.hpp"
 #include "operations/norm.hpp"
 #include "operations/inverse.hpp"
 #include "operations/invariants.hpp"
