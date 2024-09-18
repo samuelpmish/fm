@@ -2,8 +2,11 @@
 
 #include <gtest/gtest.h>
 
-#include "fm.hpp"
-#include "operations/print.hpp"
+#include "fm/types/vec.hpp"
+#include "fm/types/matrix.hpp"
+
+#include "fm/operations/dot.hpp"
+#include "fm/operations/print.hpp"
 
 static constexpr float eps = 1.0e-15;
 static constexpr float epsf = 1.0e-7f;

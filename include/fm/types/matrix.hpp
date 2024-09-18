@@ -1,8 +1,8 @@
 #pragma once
 
-#include "type_aliases.hpp"
+#include "fm/type_aliases.hpp"
 
-#include "types/vec.hpp"
+#include "fm/types/vec.hpp"
 
 #include <algorithm>
 
@@ -30,7 +30,7 @@ struct matrix<Kind::Isotropic, dim, dim, T> {
   constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data; }
   T data;
 };
-template < u32 dim, typename T >
+template < u32 dim, typename T=double >
 using iso = matrix<Kind::Isotropic, dim, dim, T>;
 using iso2 = matrix<Kind::Isotropic, 2, 2, double>;
 using iso3 = matrix<Kind::Isotropic, 3, 3, double>;
@@ -45,7 +45,7 @@ struct matrix<Kind::Diagonal, dim, dim, T> {
   constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data[i]; }
   vec<dim,T> data;
 };
-template < u32 dim, typename T >
+template < u32 dim, typename T=double >
 using diag = matrix<Kind::Diagonal, dim, dim, T>;
 using diag2 = matrix<Kind::Diagonal, 2, 2, double>;
 using diag3 = matrix<Kind::Diagonal, 3, 3, double>;
@@ -90,7 +90,7 @@ struct matrix<Kind::Skew, 3, 3, T> {
   vec<3,T> data;
 };
 
-template < u32 dim, typename T >
+template < u32 dim, typename T=double >
 using skew = matrix<Kind::Skew, dim, dim, T>;
 using skew2 = matrix<Kind::Skew, 2, 2, double>;
 using skew3 = matrix<Kind::Skew, 3, 3, double>;
@@ -145,7 +145,7 @@ struct matrix<Kind::Rotation, 3, 3, T> {
   vec<3,T> s;
 };
 
-template < u32 dim, typename T >
+template < u32 dim, typename T=double >
 using rot = matrix<Kind::Rotation, dim, dim, T>;
 using rot2 = matrix<Kind::Rotation, 2, 2, double>;
 using rot3 = matrix<Kind::Rotation, 3, 3, double>;

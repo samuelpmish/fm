@@ -1,18 +1,16 @@
 #pragma once
 
-#include "types/vec.hpp"
-#include "types/mat.hpp"
+#include "fm/types/vec.hpp"
+#include "fm/types/mat.hpp"
 
-template < typename S, uint32_t n, typename T >
-constexpr auto linear_solve(const S& A, const vec<n,T>& b) {
+namespace fm {
 
-  constexpr auto S_type = S::type;
-  static_assert(S::dimensions[0] == n &&
-                S::dimensions[1] == n, "incorrect coefficient matrix dimensions");
+template < Kind kind, uint32_t n, typename T >
+constexpr auto linear_solve(const matrix<kind, n, n, T>& A, const vec<n,T>& b) {
 
-  vec<n,decltype(b[0] / (typename S::data_type{}))> x{};
+  vec<n,T> x{};
 
-  if constexpr (S_type == fm::type::mat) {
+  if constexpr (kind == Kind::General) {
 
     constexpr auto abs = [](T x) { return (x < 0) ? -x : x; };
 
@@ -63,7 +61,7 @@ constexpr auto linear_solve(const S& A, const vec<n,T>& b) {
 
   }
 
-  if constexpr (S_type == fm::type::sym) {
+  if constexpr (kind == Kind::Symmetric) {
 
     auto U = A;
 
@@ -96,23 +94,25 @@ constexpr auto linear_solve(const S& A, const vec<n,T>& b) {
 
   }
 
-  if constexpr (S_type == fm::type::diag) {
+  if constexpr (kind == Kind::Diagonal) {
     for (int i = 0; i < n; i++) {
       x[i] = b[i] / A.data[i];
     } 
   }
 
-  if constexpr (S_type == fm::type::iso) {
+  if constexpr (kind == Kind::Isotropic) {
     auto scale = 1.0 / A.data;
     for (int i = 0; i < n; i++) {
       x[i] = b[i] * scale;
     } 
   }
 
-  if constexpr (S_type == fm::type::ortho) {
+  if constexpr (kind == Kind::Rotation) {
 
   }
 
   return x;
+
+}
 
 }

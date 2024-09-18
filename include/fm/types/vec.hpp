@@ -157,3 +157,45 @@ constexpr auto dot(const vec< dim, S > & u, const vec< dim, T > & v) {
   }
   return total;
 }
+
+template < typename T, int n >
+inline vec<n,T> min(const vec<n,T> & v, T value) {
+  vec<n,T> out{};
+  for (int i = 0; i < n; i++) {
+    out[i] = std::min(v[i], value);
+  }
+  return out;
+}
+
+template < typename T, int n >
+inline vec<n,T> min(T value, const vec<n,T> & v) { return min(v, value); }
+
+template < typename T, int n >
+constexpr vec<n,T> max(const vec<n,T> & v, T value) {
+  vec<n,T> out{};
+  for (int i = 0; i < n; i++) {
+    out[i] = std::max(v[i], value);
+  }
+  return out;
+}
+
+template < typename T, int n >
+constexpr vec<n,T> max(T value, const vec<n,T> & v) { return max(v, value); }
+
+template < typename T, int n >
+constexpr T min(const vec<n,T> & v) { 
+  T minval = v[0];
+  for (int i = 0; i < n; i++) {
+    minval = std::min(minval, v[i]);
+  }
+  return minval;
+}
+
+template < typename T, int n >
+constexpr T max(const vec<n,T> & v) { 
+  T maxval = v[0];
+  for (int i = 0; i < n; i++) {
+    maxval = std::max(maxval, v[i]);
+  }
+  return maxval;
+}

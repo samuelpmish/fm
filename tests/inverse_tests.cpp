@@ -1,8 +1,8 @@
 #include "common.hpp"
 
-#include "types/matrix.hpp"
-#include "operations/print.hpp"
-#include "operations/inverse.hpp"
+#include "fm/types/matrix.hpp"
+#include "fm/operations/print.hpp"
+#include "fm/operations/inverse.hpp"
 
 using namespace fm;
 

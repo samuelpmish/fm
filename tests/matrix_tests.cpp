@@ -1,7 +1,6 @@
 #include "common.hpp"
 
-#include "types/matrix.hpp"
-#include "operations/transpose.hpp"
+#include "fm/operations/transpose.hpp"
 
 using namespace fm;
 

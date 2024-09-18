@@ -1,7 +1,7 @@
 #pragma once
 
-#include "operations/transpose.hpp"
-#include "operations/invariants.hpp"
+#include "fm/operations/transpose.hpp"
+#include "fm/operations/invariants.hpp"
 
 namespace fm {
 

@@ -1,7 +1,7 @@
 #include "common.hpp"
 
-#include "operations/dot.hpp"
-#include "operations/linear_solve.hpp"
+#include "fm/operations/dot.hpp"
+#include "fm/operations/linear_solve.hpp"
 
 double tolerance = 1.0e-14;
 

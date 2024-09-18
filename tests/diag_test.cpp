@@ -1,5 +1,7 @@
 #include "common.hpp"
 
+using namespace fm;
+
 TEST(UnitTest, diag2D) {
   diag<2> I1{1.0, 2.0};
   diag<2> I2{0.25, 0.5};

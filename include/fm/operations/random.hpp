@@ -2,6 +2,8 @@
 
 #include <random>
 
+namespace fm {
+
 template < typename T = double >
 T random_real(T a = -1.0, T b = 1.0) {
   static std::default_random_engine generator;
@@ -25,4 +27,6 @@ mat<m,n,T> random_mat() {
     output[i] = random_vec<m,T>();
   }
   return output;
+}
+
 }
