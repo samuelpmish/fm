@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include <algorithm> // for std::{min,max}
+
+namespace fm {
 
 template < uint32_t dim, typename T = double >
 struct vec { 
@@ -18,6 +21,9 @@ struct vec {
 
 template < uint32_t dim, typename T = float >
 vec(const T (&)[dim]) -> vec<dim, T>;
+
+template < uint32_t dim >
+using vecf = vec<dim, float>;
 
 using vec2f = vec<2, float>;
 using vec2 = vec<2, double>;
@@ -158,6 +164,25 @@ constexpr auto dot(const vec< dim, S > & u, const vec< dim, T > & v) {
   return total;
 }
 
+// vector-vector products
+template <typename T>
+constexpr vec<3,T> cross(const vec<T, 3> & u, const vec<3,T> & v) {
+  return vec<3,T>{
+    u[1] * v[2] - u[2] * v[1], 
+    u[2] * v[0] - u[0] * v[2],
+    u[0] * v[1] - u[1] * v[0] 
+  };
+}
+
+template < typename T, int n >
+constexpr T min(const vec<n,T> & v) { 
+  T minval = v[0];
+  for (int i = 0; i < n; i++) {
+    minval = std::min(minval, v[i]);
+  }
+  return minval;
+}
+
 template < typename T, int n >
 inline vec<n,T> min(const vec<n,T> & v, T value) {
   vec<n,T> out{};
@@ -171,6 +196,15 @@ template < typename T, int n >
 inline vec<n,T> min(T value, const vec<n,T> & v) { return min(v, value); }
 
 template < typename T, int n >
+constexpr T max(const vec<n,T> & v) { 
+  T maxval = v[0];
+  for (int i = 0; i < n; i++) {
+    maxval = std::max(maxval, v[i]);
+  }
+  return maxval;
+}
+
+template < typename T, int n >
 constexpr vec<n,T> max(const vec<n,T> & v, T value) {
   vec<n,T> out{};
   for (int i = 0; i < n; i++) {
@@ -182,20 +216,18 @@ constexpr vec<n,T> max(const vec<n,T> & v, T value) {
 template < typename T, int n >
 constexpr vec<n,T> max(T value, const vec<n,T> & v) { return max(v, value); }
 
-template < typename T, int n >
-constexpr T min(const vec<n,T> & v) { 
-  T minval = v[0];
-  for (int i = 0; i < n; i++) {
-    minval = std::min(minval, v[i]);
-  }
-  return minval;
+template < typename T >
+T clamp(const T & value, const T & lower, const T & upper) {
+  return std::max(lower, std::min(value, upper));
 }
 
 template < typename T, int n >
-constexpr T max(const vec<n,T> & v) { 
-  T maxval = v[0];
+inline vec<n,T> clamp(const vec<n,T> & v, T lower, T upper) {
+  vec<n,T> out{};
   for (int i = 0; i < n; i++) {
-    maxval = std::max(maxval, v[i]);
+    out[i] = clamp(v[i], lower, upper);
   }
-  return maxval;
+  return out;
+}
+
 }
