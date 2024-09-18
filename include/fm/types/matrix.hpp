@@ -219,5 +219,12 @@ template < u32 m, u32 n, typename T >
 using mat = matrix<Kind::General, m, n, T>;
 using mat2 = matrix<Kind::General, 2, 2, double>;
 using mat3 = matrix<Kind::General, 3, 3, double>;
+using mat3x4 = matrix<Kind::General, 3, 4, double>;
+using mat4x3 = matrix<Kind::General, 4, 3, double>;
+
+using mat2f   = matrix<Kind::General, 2, 2, float>;
+using mat3f   = matrix<Kind::General, 3, 3, float>;
+using mat3x4f = matrix<Kind::General, 3, 4, float>;
+using mat4x3f = matrix<Kind::General, 4, 3, float>;
 
 }  // namespace fm
