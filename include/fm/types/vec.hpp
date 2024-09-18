@@ -31,6 +31,8 @@ using vec2 = vec<2, double>;
 using vec3f = vec<3, float>;
 using vec3 = vec<3, double>;
 
+////////////////////////////////////////////////////////////////////////////////
+
 template < uint32_t dim, typename S, typename T >
 constexpr auto operator!=(const vec< dim, S > & u, const vec< dim, T > & v) {
   for (int i = 0; i < dim; i++) {
@@ -107,9 +109,8 @@ constexpr auto operator/(const vec< dim, S > & u, const vec< dim, T > & v) {
   return out; 
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-////
 template < uint32_t dim, typename T >
 constexpr auto operator*(const double & u, const vec< dim, T > & v) {
   vec< dim, T > out{};
@@ -179,6 +180,17 @@ constexpr vec<3,T> cross(const vec<3,T> & u, const vec<3,T> & v) {
   };
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+template < int n, typename T>
+constexpr vec<n,T> abs(const vec<n,T> & v) {
+  vec<n,T> absv{};
+  for (int i = 0; i < n; i++) {
+    absv[i] = std::abs(v[i]);
+  }
+  return absv;
+}
+
 template < typename T, int n >
 constexpr T min(const vec<n,T> & v) { 
   T minval = v[0];
@@ -218,7 +230,7 @@ constexpr vec<n,T> max(const vec<n,T> & v, T value) {
   return out;
 }
 
-template < typename T, int n >
+template < typename T, uint32_t n >
 constexpr vec<n,T> max(T value, const vec<n,T> & v) { return max(v, value); }
 
 template < typename T >
@@ -226,13 +238,29 @@ T clamp(const T & value, const T & lower, const T & upper) {
   return std::max(lower, std::min(value, upper));
 }
 
-template < typename T, int n >
+template < typename T, uint32_t n >
 inline vec<n,T> clamp(const vec<n,T> & v, T lower, T upper) {
   vec<n,T> out{};
-  for (int i = 0; i < n; i++) {
+  for (uint32_t i = 0; i < n; i++) {
     out[i] = clamp(v[i], lower, upper);
   }
   return out;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+template < typename T >
+inline vec<2,T> xy(const vec<3,T> & v) { return {v[0], v[1]}; }
+
+template < typename T >
+inline vec<2,T> xy(const vec<2,T> & v) { return v; }
+
+template < typename T >
+inline vec<3,T> xyz(const vec<2,T> & v) { return {v[0], v[1], T{}}; }
+
+template < typename T >
+inline vec<3,T> xyz(const vec<3,T> & v) { return v; }
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

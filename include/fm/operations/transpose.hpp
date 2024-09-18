@@ -1,3 +1,5 @@
+#pragma once
+
 #include "fm/types/matrix.hpp"
 
 namespace fm {

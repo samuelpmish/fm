@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fm/types/vec.hpp"
-#include "fm/types/mat.hpp"
+#include "fm/types/matrix.hpp"
 
 namespace fm {
 

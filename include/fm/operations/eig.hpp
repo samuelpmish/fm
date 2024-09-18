@@ -1,8 +1,8 @@
 #pragma once
 
-#include "types/sym.hpp"
-#include "types/diag.hpp"
-#include "types/ortho.hpp"
+namespace fm {
+
+#if 0
 
 // eigendecomposition for symmetric A
 //
@@ -113,5 +113,9 @@ inline Eigensystem eig(const sym3 & A) {
     eta += tr(A) / 3.0;
 
   }
+
+}
+
+#endif
 
 }

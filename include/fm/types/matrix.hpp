@@ -74,9 +74,9 @@ struct matrix<Kind::Skew, 3, 3, T> {
   static constexpr u32 nrows() { return 3; }
   static constexpr u32 ncols() { return 3; }
   constexpr const auto operator()(u32 i, u32 j) const { 
-    return abs(i32(i) - i32(j)) * data[0 * (i == 0) & (j == 1) + 
-                                       1 * (i == 1) & (j == 2) +
-                                       2 * (i == 1) & (j == 2)];
+    return std::abs(i32(i) - i32(j)) * data[0 * (i == 0) & (j == 1) + 
+                                            1 * (i == 1) & (j == 2) +
+                                            2 * (i == 1) & (j == 2)];
   }
 
   constexpr operator matrix<Kind::General, 3, 3, T>() const {
@@ -219,12 +219,26 @@ template < u32 m, u32 n, typename T >
 using mat = matrix<Kind::General, m, n, T>;
 using mat2 = matrix<Kind::General, 2, 2, double>;
 using mat3 = matrix<Kind::General, 3, 3, double>;
+using mat2x3 = matrix<Kind::General, 2, 3, double>;
+using mat3x2 = matrix<Kind::General, 3, 2, double>;
 using mat3x4 = matrix<Kind::General, 3, 4, double>;
 using mat4x3 = matrix<Kind::General, 4, 3, double>;
 
 using mat2f   = matrix<Kind::General, 2, 2, float>;
 using mat3f   = matrix<Kind::General, 3, 3, float>;
+using mat2x3f = matrix<Kind::General, 2, 3, float>;
+using mat3x2f = matrix<Kind::General, 3, 2, float>;
 using mat3x4f = matrix<Kind::General, 3, 4, float>;
 using mat4x3f = matrix<Kind::General, 4, 3, float>;
 
 }  // namespace fm
+
+#include "fm/operations/dot.hpp"
+#include "fm/operations/eig.hpp"
+#include "fm/operations/invariants.hpp"
+#include "fm/operations/inverse.hpp"
+#include "fm/operations/linear_solve.hpp"
+#include "fm/operations/norm.hpp"
+#include "fm/operations/operator_overloads.hpp"
+#include "fm/operations/outer.hpp"
+#include "fm/operations/transpose.hpp"
