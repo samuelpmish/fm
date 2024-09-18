@@ -57,6 +57,11 @@ constexpr void operator+=(vec< n, T > & u, const vec< n, T > & v) {
   for (uint32_t i = 0; i < n; i++) u[i] += v[i];
 }
 
+template < uint32_t n, typename T >
+constexpr void operator-=(vec< n, T > & u, const vec< n, T > & v) {
+  for (uint32_t i = 0; i < n; i++) u[i] -= v[i];
+}
+
 template < uint32_t dim, typename S, typename T >
 constexpr auto operator+(const vec< dim, S > & u, const vec< dim, T > & v) {
   vec< dim, decltype(S{} + T{}) > out{};
@@ -166,7 +171,7 @@ constexpr auto dot(const vec< dim, S > & u, const vec< dim, T > & v) {
 
 // vector-vector products
 template <typename T>
-constexpr vec<3,T> cross(const vec<T, 3> & u, const vec<3,T> & v) {
+constexpr vec<3,T> cross(const vec<3,T> & u, const vec<3,T> & v) {
   return vec<3,T>{
     u[1] * v[2] - u[2] * v[1], 
     u[2] * v[0] - u[0] * v[2],
