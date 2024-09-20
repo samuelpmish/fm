@@ -148,6 +148,15 @@ constexpr auto operator/(const vec< dim, T > & v, const double & u) {
 }
 
 template < uint32_t dim, typename T >
+constexpr auto norm_squared(const vec< dim, T > & v) {
+  T out{};
+  for (uint32_t i = 0; i < dim; i++) {
+    out += v[i] * v[i];
+  }
+  return out; 
+}
+
+template < uint32_t dim, typename T >
 constexpr auto norm(const vec< dim, T > & v) {
   T out{};
   for (uint32_t i = 0; i < dim; i++) {
@@ -182,7 +191,7 @@ constexpr vec<3,T> cross(const vec<3,T> & u, const vec<3,T> & v) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template < int n, typename T>
+template < uint32_t n, typename T>
 constexpr vec<n,T> abs(const vec<n,T> & v) {
   vec<n,T> absv{};
   for (int i = 0; i < n; i++) {
@@ -191,7 +200,7 @@ constexpr vec<n,T> abs(const vec<n,T> & v) {
   return absv;
 }
 
-template < typename T, int n >
+template < uint32_t n, typename T >
 constexpr T min(const vec<n,T> & v) { 
   T minval = v[0];
   for (int i = 0; i < n; i++) {
@@ -200,7 +209,7 @@ constexpr T min(const vec<n,T> & v) {
   return minval;
 }
 
-template < typename T, int n >
+template < uint32_t n, typename T >
 inline vec<n,T> min(const vec<n,T> & v, T value) {
   vec<n,T> out{};
   for (int i = 0; i < n; i++) {
@@ -209,10 +218,10 @@ inline vec<n,T> min(const vec<n,T> & v, T value) {
   return out;
 }
 
-template < typename T, int n >
+template < uint32_t n, typename T >
 inline vec<n,T> min(T value, const vec<n,T> & v) { return min(v, value); }
 
-template < typename T, int n >
+template < uint32_t n, typename T >
 constexpr T max(const vec<n,T> & v) { 
   T maxval = v[0];
   for (int i = 0; i < n; i++) {
@@ -221,7 +230,7 @@ constexpr T max(const vec<n,T> & v) {
   return maxval;
 }
 
-template < typename T, int n >
+template < uint32_t n, typename T >
 constexpr vec<n,T> max(const vec<n,T> & v, T value) {
   vec<n,T> out{};
   for (int i = 0; i < n; i++) {
@@ -230,7 +239,7 @@ constexpr vec<n,T> max(const vec<n,T> & v, T value) {
   return out;
 }
 
-template < typename T, uint32_t n >
+template < int n, typename T >
 constexpr vec<n,T> max(T value, const vec<n,T> & v) { return max(v, value); }
 
 template < typename T >
@@ -238,7 +247,7 @@ T clamp(const T & value, const T & lower, const T & upper) {
   return std::max(lower, std::min(value, upper));
 }
 
-template < typename T, uint32_t n >
+template < uint32_t n, typename T >
 inline vec<n,T> clamp(const vec<n,T> & v, T lower, T upper) {
   vec<n,T> out{};
   for (uint32_t i = 0; i < n; i++) {

@@ -27,6 +27,19 @@ struct matrix<Kind::Isotropic, dim, dim, T> {
   using type = T;
   static constexpr u32 nrows() { return dim; }
   static constexpr u32 ncols() { return dim; }
+
+  constexpr const auto operator[](u32 i) const { 
+    vec<dim,T> output{};
+    output[i] = data;
+    return output;
+  }
+
+  constexpr const auto operator()(u32 i) const { 
+    vec<dim,T> output{};
+    output[i] = data;
+    return output;
+  }
+
   constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data; }
   T data;
 };
@@ -230,6 +243,11 @@ using mat2x3f = matrix<Kind::General, 2, 3, float>;
 using mat3x2f = matrix<Kind::General, 3, 2, float>;
 using mat3x4f = matrix<Kind::General, 3, 4, float>;
 using mat4x3f = matrix<Kind::General, 4, 3, float>;
+
+template <typename T, int dim>
+constexpr iso<dim, T> Identity() {
+  return iso<dim,T>{1.0};
+}
 
 }  // namespace fm
 

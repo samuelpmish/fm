@@ -13,10 +13,10 @@ struct AABB {
 
   T SDF(const vec<dim,T> & p) const {
     constexpr T zero{};
-    auto center = (min + max) * 0.5f;
-    auto halfwidths = (max - min) * 0.5f;
-    auto q = abs(p - center) - halfwidths;
-    return norm(max(q, zero)) + std::min(max(q), zero);
+    vec<dim,T> center = (min + max) * 0.5f;
+    vec<dim,T> halfwidths = (max - min) * 0.5f;
+    vec<dim,T> q = abs(p - center) - halfwidths;
+    return norm(fm::max(q, zero)) + std::min(fm::max(q), zero);
   }
 };
 
