@@ -171,7 +171,12 @@ constexpr auto norm(const vec< dim, T > & v) {
 
 template < uint32_t dim, typename T >
 constexpr auto normalize(const vec< dim, T > & v) {
-  return (v / norm(v));
+  T norm_v = norm(v);
+  if (norm_v != 0) {
+    return v / norm_v;
+  } else {
+    return vec< dim, T >{};
+  }
 }
 
 template < uint32_t dim, typename S, typename T >
