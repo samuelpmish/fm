@@ -34,6 +34,9 @@ template < Kind kind, u32 dim, typename T >
 constexpr auto det(const matrix<kind, dim, dim, T> & A) {
 
   if constexpr (kind == Kind::General || kind == Kind::Symmetric) {
+    if constexpr (dim == 1) {
+      return A(0,0);
+    }
     if constexpr (dim == 2) {
       return A(0,0) * A(1,1) - A(0,1) * A(1,0);
     }

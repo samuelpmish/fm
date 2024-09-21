@@ -11,13 +11,47 @@ struct vec {
   using data_type = T;
   static constexpr int dimension = dim;
 
-  T data[dim];
+  constexpr vec() : data{} {}
+
+  constexpr vec(T a) {
+    static_assert(dim == 1, "vec(T) only supported for vec<1,T>");
+    data[0] = a;
+  }
+
+  constexpr vec(T a, T b) {
+    static_assert(dim == 2, "vec(T, T) only supported for vec<2,T>");
+    data[0] = a;
+    data[1] = b;
+  }
+
+  constexpr vec(T a, T b, T c) {
+    static_assert(dim == 3, "vec(T, T, T) only supported for vec<3,T>");
+    data[0] = a;
+    data[1] = b;
+    data[2] = c;
+  }
+
+  constexpr vec(T a, T b, T c, T d) {
+    static_assert(dim == 4, "vec(T, T, T, T) only supported for vec<4,T>");
+    data[0] = a;
+    data[1] = b;
+    data[2] = c;
+    data[3] = d;
+  }
+
+  // only allow implicit conversion to `T` when the vec is degenerate
+  operator typename std::conditional<dim == 1, T, void>::type () const {
+    return data[0];
+  }
 
   T & operator[](uint32_t i) { return data[i]; }
   const T & operator[](uint32_t i) const { return data[i]; }
 
   T & operator()(uint32_t i) { return data[i]; }
   const T & operator()(uint32_t i) const { return data[i]; }
+
+  T data[dim];
+
 };
 
 template < uint32_t dim, typename T = float >
@@ -25,6 +59,9 @@ vec(const T (&)[dim]) -> vec<dim, T>;
 
 template < uint32_t dim >
 using vecf = vec<dim, float>;
+
+using vec1f = vec<1, float>;
+using vec1 = vec<1, double>;
 
 using vec2f = vec<2, float>;
 using vec2 = vec<2, double>;
@@ -281,6 +318,24 @@ inline vec<3,T> xyz(const vec<3,T> & v) { return v; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+constexpr int tensor_rank(double) { return 0; }
+
+template < int n, typename T >
+constexpr int tensor_rank(vec<n,T>) { return 1; }
+
+template < int n >
+std::ostream & operator<<(std::ostream & out, vec< n, double > v) {
+  out << '{';
+  for (int i = 0; i < n; i++) {
+    out << v[i];
+    if (i != n - 1) out << ", ";
+  }
+  out << '}';
+  return out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 template < typename T, uint32_t n >
 std::ostream & operator<<(std::ostream & out, vec<n,T> v) {
   out << '{' << v(0);
@@ -290,7 +345,5 @@ std::ostream & operator<<(std::ostream & out, vec<n,T> v) {
   out << '}';
   return out;
 }
-
-
 
 }

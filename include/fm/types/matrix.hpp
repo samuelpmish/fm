@@ -247,8 +247,9 @@ struct matrix<Kind::General, rows, cols, T> {
   vec<cols, T> data[rows];
 };
 
-template < u32 m, u32 n, typename T >
+template < u32 m, u32 n, typename T = double >
 using mat = matrix<Kind::General, m, n, T>;
+using mat1 = matrix<Kind::General, 1, 1, double>;
 using mat2 = matrix<Kind::General, 2, 2, double>;
 using mat3 = matrix<Kind::General, 3, 3, double>;
 using mat4 = matrix<Kind::General, 4, 4, double>;
@@ -271,9 +272,26 @@ using mat3x4f = matrix<Kind::General, 3, 4, float>;
 using mat4x2f = matrix<Kind::General, 4, 2, float>;
 using mat4x3f = matrix<Kind::General, 4, 3, float>;
 
+template < Kind k, uint32_t m, uint32_t n, typename T >
+constexpr int tensor_rank(matrix<k,m,n,T>) { return 2; }
+
 template <typename T, int dim>
 constexpr iso<dim, T> Identity() {
   return iso<dim,T>{1.0};
+}
+
+template < typename T>
+vec<3,T> cross(const mat<3,2,T> & A) { 
+  return vec<3, T>{
+    A(1,0)*A(2,1)-A(2,0)*A(1,1),
+    A(2,0)*A(0,1)-A(0,0)*A(2,1),
+    A(0,0)*A(1,1)-A(1,0)*A(0,1)
+  };
+}
+
+template < typename T>
+vec<2,T> cross(const mat<2,1,T> & A) { 
+  return vec<2, T>{A(1,0), -A(0,0)};
 }
 
 template < Kind k, u32 m, u32 n, typename T >
