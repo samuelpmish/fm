@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <iostream>
 #include <algorithm> // for std::{min,max}
 
 namespace fm {
@@ -30,6 +31,9 @@ using vec2 = vec<2, double>;
 
 using vec3f = vec<3, float>;
 using vec3 = vec<3, double>;
+
+using vec4f = vec<4, float>;
+using vec4 = vec<4, double>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -271,5 +275,17 @@ template < typename T >
 inline vec<3,T> xyz(const vec<3,T> & v) { return v; }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+template < typename T, uint32_t n >
+std::ostream & operator<<(std::ostream & out, vec<n,T> v) {
+  out << '{' << v(0);
+  for (int i = 1; i < n; i++) {
+    out << ", " << v(i);
+  }
+  out << '}';
+  return out;
+}
+
+
 
 }

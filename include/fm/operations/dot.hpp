@@ -87,15 +87,31 @@ constexpr auto dot(const matrix<kindA, m, n, TA> & A,
                   kindB == Kind::General) {
       matrix<Kind::General, m, p, T> output;
       for (u32 i = 0; i < m; i++) {
-        for (u32 j = 0; j < m; j++) {
+        for (u32 j = 0; j < p; j++) {
           output(i,j) = A.data[i] * B(i,j);
         }
       }
       return output;
     }
 
+  }
 
-
+  // TODO: specialize remaining cases individually
+  if constexpr (kindA == Kind::Symmetric || 
+                kindA == Kind::Rotation ||
+                kindA == Kind::Skew ||
+                kindA == Kind::General) {
+    matrix<Kind::General, m, p, T> output;
+    for (u32 i = 0; i < m; i++) {
+      for (u32 j = 0; j < p; j++) {
+        T sum{};
+        for (u32 k = 0; k < n; k++) {
+          sum += A(i,k) * B(k,j);
+        }
+        output(i,j) = sum;
+      }
+    }
+    return output;
   }
 
 }

@@ -4,6 +4,7 @@
 
 #include "fm/types/vec.hpp"
 
+#include <iostream>
 #include <algorithm>
 
 namespace fm {
@@ -41,6 +42,15 @@ struct matrix<Kind::Isotropic, dim, dim, T> {
   }
 
   constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data; }
+
+  constexpr operator matrix<Kind::General, dim, dim, T>() const {
+    matrix<Kind::General, dim, dim, T> output{};
+    for (u32 i = 0; i < dim; i++) {
+      output(i,i) = data;
+    }
+    return output;
+  }
+
   T data;
 };
 template < u32 dim, typename T=double >
@@ -56,6 +66,15 @@ struct matrix<Kind::Diagonal, dim, dim, T> {
   static constexpr u32 nrows() { return dim; }
   static constexpr u32 ncols() { return dim; }
   constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data[i]; }
+
+  constexpr operator matrix<Kind::General, dim, dim, T>() const {
+    matrix<Kind::General, dim, dim, T> output{};
+    for (u32 i = 0; i < dim; i++) {
+      output(i,i) = data[i];
+    }
+    return output;
+  }
+
   vec<dim,T> data;
 };
 template < u32 dim, typename T=double >
@@ -143,7 +162,7 @@ struct matrix<Kind::Rotation, 3, 3, T> {
     if (i == 2 && j == 1) return   2*(s[1]*s[2]+   c*s[0]);
     if (i == 2 && j == 2) return 1-2*(s[0]*s[0]+s[1]*s[1]);
 
-    return 0.0;
+    return T{};
   }
 
   constexpr operator matrix<Kind::General, 3, 3, T>() const {
@@ -232,21 +251,43 @@ template < u32 m, u32 n, typename T >
 using mat = matrix<Kind::General, m, n, T>;
 using mat2 = matrix<Kind::General, 2, 2, double>;
 using mat3 = matrix<Kind::General, 3, 3, double>;
+using mat4 = matrix<Kind::General, 4, 4, double>;
+
 using mat2x3 = matrix<Kind::General, 2, 3, double>;
+using mat2x4 = matrix<Kind::General, 2, 4, double>;
 using mat3x2 = matrix<Kind::General, 3, 2, double>;
 using mat3x4 = matrix<Kind::General, 3, 4, double>;
+using mat4x2 = matrix<Kind::General, 4, 2, double>;
 using mat4x3 = matrix<Kind::General, 4, 3, double>;
 
 using mat2f   = matrix<Kind::General, 2, 2, float>;
 using mat3f   = matrix<Kind::General, 3, 3, float>;
+using mat4f   = matrix<Kind::General, 4, 4, float>;
+
 using mat2x3f = matrix<Kind::General, 2, 3, float>;
+using mat2x4f = matrix<Kind::General, 2, 4, float>;
 using mat3x2f = matrix<Kind::General, 3, 2, float>;
 using mat3x4f = matrix<Kind::General, 3, 4, float>;
+using mat4x2f = matrix<Kind::General, 4, 2, float>;
 using mat4x3f = matrix<Kind::General, 4, 3, float>;
 
 template <typename T, int dim>
 constexpr iso<dim, T> Identity() {
   return iso<dim,T>{1.0};
+}
+
+template < Kind k, u32 m, u32 n, typename T >
+std::ostream & operator<<(std::ostream & out, const matrix<k, m, n, T> & A) {
+  out << '{' << '\n';
+  for (int i = 0; i < m; i++) {
+    out << "  {" << A(i,0);
+    for (int j = 1; j < n; j++) {
+      out << ", " << A(i,j);
+    }
+    out << '}' << '\n';
+  }
+  out << '}';
+  return out;
 }
 
 }  // namespace fm
