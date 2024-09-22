@@ -90,11 +90,11 @@ struct matrix<Kind::Skew, 2, 2, T> {
   static constexpr u32 nrows() { return 2; }
   static constexpr u32 ncols() { return 2; }
   const auto operator()(u32 i, u32 j) const { 
-    return data * (i != j) * ((j > i) ? 1 : -1);
+    return data * (i != j) * ((j < i) ? 1 : -1);
   }
 
   constexpr operator matrix<Kind::General, 2, 2, T>() const {
-    return {{{0.0, data}, {-data, 0.0}}};
+    return {{{0.0, -data}, {data, 0.0}}};
   }
 
   T data;
@@ -105,17 +105,24 @@ struct matrix<Kind::Skew, 3, 3, T> {
   using type = T;
   static constexpr u32 nrows() { return 3; }
   static constexpr u32 ncols() { return 3; }
+
   constexpr const auto operator()(u32 i, u32 j) const { 
-    return std::abs(i32(i) - i32(j)) * data[0 * (i == 0) & (j == 1) + 
-                                            1 * (i == 1) & (j == 2) +
-                                            2 * (i == 1) & (j == 2)];
+    if (i == j) return 0.0;
+    if (i == 0 && j == 1) return -data[2];
+    if (i == 1 && j == 0) return  data[2];
+    if (i == 2 && j == 0) return -data[1];
+    if (i == 0 && j == 2) return  data[1];
+    if (i == 1 && j == 2) return -data[0];
+    if (i == 2 && j == 1) return  data[0];
+
+    return T{};
   }
 
   constexpr operator matrix<Kind::General, 3, 3, T>() const {
     return {{
-      {     0.0,  data[0], data[1]}, 
-      {-data[0],      0.0, data[2]},
-      {-data[1], -data[2],     0.0}
+      {     0.0, -data[2], +data[1]}, 
+      {+data[2],      0.0, -data[0]},
+      {-data[1], +data[0],     0.0}
     }};
   }
 
@@ -275,9 +282,26 @@ using mat4x3f = matrix<Kind::General, 4, 3, float>;
 template < Kind k, uint32_t m, uint32_t n, typename T >
 constexpr int tensor_rank(matrix<k,m,n,T>) { return 2; }
 
-template <typename T, int dim>
+template <int dim, typename T=double>
 constexpr iso<dim, T> Identity() {
   return iso<dim,T>{1.0};
+}
+
+template < typename T >
+constexpr mat<3,3,T> to_3x3(const mat<2,2,T> & A) {
+  return mat<3,3,T>{{
+    {A[0][0], A[0][1], 0.0},
+    {A[1][0], A[1][1], 0.0},
+    {    0.0,     0.0, 0.0}
+  }};
+}
+ 
+template < typename T >
+constexpr mat<2,2,T> to_2x2(const mat<3,3,T> & A) {
+  return mat<2,2,T>{{
+    {A[0][0], A[0][1]},
+    {A[1][0], A[1][1]}
+  }};
 }
 
 template < typename T>

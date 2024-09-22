@@ -64,6 +64,119 @@ constexpr auto operator*=(matrix<kind, rows, cols, T> & A, T scale) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template < Kind kindA, Kind kindB, u32 m, u32 n, typename T>
+constexpr auto operator+=(matrix<kindA, m, n, T> & A, 
+                          const matrix<kindB, m, n, T> & B) {
+
+  if constexpr (kindA == Kind::General) {
+    if constexpr (kindB == Kind::General || 
+                  kindB == Kind::Symmetric || 
+                  kindB == Kind::Skew || 
+                  kindB == Kind::Rotation) {
+      for (uint32_t i = 0; i < m; i++) {
+        for (uint32_t j = 0; j < n; j++) {
+          A(i,j) += B(i,j);
+        }
+      }
+    }
+
+    if constexpr (kindA == Kind::Diagonal) {
+      for (uint32_t i = 0; i < m; i++) {
+        A(i,i) += B.data[i];
+      }
+    }
+
+    if constexpr (kindA == Kind::Isotropic) {
+      for (uint32_t i = 0; i < m; i++) {
+        A(i,i) += B.data;
+      }
+    }
+  }
+
+  if constexpr (kindA == Kind::Symmetric) {
+    if constexpr (kindB == Kind::Symmetric) {
+      for (uint32_t i = 0; i < decltype(A)::num_values; i++) {
+        A.data[i] += B.data[i];
+      }
+    }
+
+    if constexpr (kindA == Kind::Diagonal) {
+      for (uint32_t i = 0; i < m; i++) {
+        A(i,i) += B.data[i];
+      }
+    }
+
+    if constexpr (kindA == Kind::Isotropic) {
+      for (uint32_t i = 0; i < m; i++) {
+        A(i,i) += B.data;
+      }
+    }
+
+    if constexpr (kindB == Kind::General || 
+                  kindB == Kind::Skew || 
+                  kindB == Kind::Rotation) {
+      static_assert(always_false<T>{}, "sym += {skew, rotation, general} not supported");
+    }
+  }
+
+  if constexpr (kindA == Kind::Rotation) {
+    static_assert(always_false<T>{}, "rot does not support operator+=");
+  }
+
+  if constexpr (kindA == Kind::Skew) {
+    if constexpr (kindB == Kind::Skew) {
+      for (uint32_t i = 0; i < decltype(A)::num_values; i++) {
+        A.data[i] += B.data[i];
+      }
+    }
+
+    if constexpr (kindB == Kind::General || 
+                  kindB == Kind::Symmetric ||
+                  kindB == Kind::Diagonal ||
+                  kindB == Kind::Isotropic ||
+                  kindB == Kind::Rotation) {
+      static_assert(always_false<T>{}, "skew += skew is the only supported operator+=()");
+    }
+  }
+
+  if constexpr (kindA == Kind::Diagonal) {
+    if constexpr (kindB == Kind::Diagonal) {
+      for (uint32_t i = 0; i < m; i++) {
+        A.data[i] += B.data[i];
+      }
+    }
+
+    if constexpr (kindB == Kind::Isotropic) {
+      for (uint32_t i = 0; i < m; i++) {
+        A.data[i] += B.data;
+      }
+    }
+
+    if constexpr (kindB == Kind::General || 
+                  kindB == Kind::Symmetric ||
+                  kindB == Kind::Skew ||
+                  kindB == Kind::Rotation) {
+      static_assert(always_false<T>{}, "diag += {mat, sym, skew, rot} are unsupported");
+    }
+  }
+
+  if constexpr (kindA == Kind::Isotropic) {
+    if constexpr (kindB == Kind::Isotropic) {
+      A.data += B.data;
+    }
+
+    if constexpr (kindB == Kind::General || 
+                  kindB == Kind::Symmetric ||
+                  kindB == Kind::Skew ||
+                  kindB == Kind::Diagonal ||
+                  kindB == Kind::Rotation) {
+      static_assert(always_false<T>{}, "iso += {diag, mat, sym, skew, rot} are unsupported");
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 template < Kind kind, u32 rows, u32 cols, typename T>
 constexpr auto operator/(T a, const matrix<kind, rows, cols, T> & B) {
 

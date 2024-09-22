@@ -152,6 +152,10 @@ constexpr auto operator/(const vec< dim, S > & u, const vec< dim, T > & v) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+constexpr double dot(const double & u, const double & v) {
+  return u * v;
+}
+
 template < uint32_t dim, typename T >
 constexpr auto operator*(const double & u, const vec< dim, T > & v) {
   vec< dim, T > out{};
@@ -162,7 +166,25 @@ constexpr auto operator*(const double & u, const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename T >
+constexpr auto dot(const T & u, const vec< dim, T > & v) {
+  vec< dim, T > out{};
+  for (uint32_t i = 0; i < dim; i++) {
+    out[i] = u * v[i];
+  }
+  return out; 
+}
+
+template < uint32_t dim, typename T >
 constexpr auto operator*(const vec< dim, T > & v, const double & u) {
+  vec< dim, T > out{};
+  for (uint32_t i = 0; i < dim; i++) {
+    out[i] = v[i] * u;
+  }
+  return out; 
+}
+
+template < uint32_t dim, typename T >
+constexpr auto dot(const vec< dim, T > & v, const T & u) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = v[i] * u;

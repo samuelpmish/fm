@@ -12,6 +12,10 @@ constexpr auto inv(const matrix<kind, dim, dim, T> & A) {
 
   if constexpr (kind == Kind::General) {
 
+    if constexpr (dim == 1) {
+      return mat1{1.0 / A(0, 0)};
+    }
+
     if constexpr (dim == 2) {
       T inv_detA(1.0 / det(A));
 
