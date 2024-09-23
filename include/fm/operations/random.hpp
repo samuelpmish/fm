@@ -12,19 +12,19 @@ T random_real(T a = -1.0, T b = 1.0) {
 }
 
 template < uint32_t n, typename T = double >
-vec<n,T> random_vec() {
+vec<n,T> random_vec(T a = -1.0, T b = 1.0) {
   vec<n,T> output;
   for (uint32_t i = 0; i < n; i++) {
-    output[i] = random_real<T>();
+    output[i] = random_real<T>(a, b);
   }
   return output;
 }
 
 template < uint32_t m, uint32_t n, typename T = double >
-mat<m,n,T> random_mat() {
+mat<m,n,T> random_mat(T a = -1.0, T b = 1.0) {
   mat<m,n,T> output;
-  for (uint32_t i = 0; i < n; i++) {
-    output[i] = random_vec<m,T>();
+  for (uint32_t i = 0; i < m; i++) {
+    output[i] = random_vec<n,T>(a, b);
   }
   return output;
 }

@@ -2,15 +2,21 @@
 
 namespace fm {
 
+constexpr auto tr(const double & A) {
+  return A;
+}
+
 template < Kind kind, u32 dim, typename T >
 constexpr auto tr(const matrix<kind, dim, dim, T> & A) {
 
   if constexpr (kind == Kind::General || kind == Kind::Symmetric) {
+    if constexpr (dim == 1) return A(0,0);
     if constexpr (dim == 2) return A(0,0) + A(1,1);
     if constexpr (dim == 3) return A(0,0) + A(1,1) + A(2,2);
   }
 
   if constexpr (kind == Kind::Diagonal) {
+    if constexpr (dim == 1) return A.data[0];
     if constexpr (dim == 2) return A.data[0] + A.data[1];
     if constexpr (dim == 3) return A.data[0] + A.data[1] + A.data[2];
   }
@@ -28,6 +34,10 @@ constexpr auto tr(const matrix<kind, dim, dim, T> & A) {
     return dim * A.data;
   }
 
+}
+
+constexpr auto det(const double & A) {
+  return A;
 }
 
 template < Kind kind, u32 dim, typename T >

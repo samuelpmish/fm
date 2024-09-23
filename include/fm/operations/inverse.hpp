@@ -5,6 +5,8 @@
 
 namespace fm {
 
+constexpr auto inv(const double & A) { return 1.0 / A; }
+
 template < Kind kind, u32 dim, typename T >
 constexpr auto inv(const matrix<kind, dim, dim, T> & A) {
 

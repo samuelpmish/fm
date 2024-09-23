@@ -40,15 +40,15 @@ struct vec {
   }
 
   // only allow implicit conversion to `T` when the vec is degenerate
-  operator typename std::conditional<dim == 1, T, void>::type () const {
+  constexpr operator typename std::conditional<dim == 1, T, void>::type () const {
     return data[0];
   }
 
-  T & operator[](uint32_t i) { return data[i]; }
-  const T & operator[](uint32_t i) const { return data[i]; }
+  constexpr T & operator[](uint32_t i) { return data[i]; }
+  constexpr const T & operator[](uint32_t i) const { return data[i]; }
 
-  T & operator()(uint32_t i) { return data[i]; }
-  const T & operator()(uint32_t i) const { return data[i]; }
+  constexpr T & operator()(uint32_t i) { return data[i]; }
+  constexpr const T & operator()(uint32_t i) const { return data[i]; }
 
   T data[dim];
 
@@ -71,6 +71,25 @@ using vec3 = vec<3, double>;
 
 using vec4f = vec<4, float>;
 using vec4 = vec<4, double>;
+
+constexpr uint32_t dimension(double) { return 1; }
+
+template < uint32_t dim, typename T >
+constexpr uint32_t dimension(vec < dim, T >) { return dim; }
+
+constexpr auto outer(const double & u, const double & v) {
+  return u * v;
+}
+
+template <typename T, int n>
+constexpr auto outer(const double & u, const vec<n,T> & v) {
+  return u * v;
+}
+
+template <typename T, int n>
+constexpr auto outer(const vec<n,T> & u, const double & v) {
+  return u * v;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -152,10 +171,6 @@ constexpr auto operator/(const vec< dim, S > & u, const vec< dim, T > & v) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-constexpr double dot(const double & u, const double & v) {
-  return u * v;
-}
-
 template < uint32_t dim, typename T >
 constexpr auto operator*(const double & u, const vec< dim, T > & v) {
   vec< dim, T > out{};
@@ -163,6 +178,10 @@ constexpr auto operator*(const double & u, const vec< dim, T > & v) {
     out[i] = u * v[i];
   }
   return out; 
+}
+
+constexpr double dot(const double & u, const double & v) {
+  return u * v;
 }
 
 template < uint32_t dim, typename T >
@@ -322,6 +341,22 @@ inline vec<n,T> clamp(const vec<n,T> & v, T lower, T upper) {
     out[i] = clamp(v[i], lower, upper);
   }
   return out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+template < uint32_t n, typename T >
+T inner(const vec<n, T> & u, const vec<n, T> & v) {
+  return dot(u, v);
+}
+
+template < uint32_t n, typename T >
+auto chain_rule(const vec<n, T> & df_dx, T dx) {
+  vec<n, decltype(inner(T{}, T{}))> df{};
+  for (int i = 0; i < n; i++) {
+    df[i] = inner(df_dx[i], dx);
+  }
+  return df;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

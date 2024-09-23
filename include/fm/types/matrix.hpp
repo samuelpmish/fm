@@ -89,6 +89,8 @@ struct matrix<Kind::Skew, 2, 2, T> {
   using type = T;
   static constexpr u32 nrows() { return 2; }
   static constexpr u32 ncols() { return 2; }
+  static constexpr u32 num_values = 1;
+
   const auto operator()(u32 i, u32 j) const { 
     return data * (i != j) * ((j < i) ? 1 : -1);
   }
@@ -105,6 +107,7 @@ struct matrix<Kind::Skew, 3, 3, T> {
   using type = T;
   static constexpr u32 nrows() { return 3; }
   static constexpr u32 ncols() { return 3; }
+  static constexpr u32 num_values = 3;
 
   constexpr const auto operator()(u32 i, u32 j) const { 
     if (i == j) return 0.0;
@@ -332,6 +335,71 @@ std::ostream & operator<<(std::ostream & out, const matrix<k, m, n, T> & A) {
   return out;
 }
 
+template <typename S, typename T, u32 m, u32 n>
+constexpr auto outer(const vec<m,S> & u, const vec<n,T> & v) {
+  mat<m,n,decltype(S{} * T{})> uvT{};
+  for (u32 i = 0; i < m; i++) {
+    for (u32 j = 0; j < n; j++) {
+      uvT[i][j] = u[i] * v[j];
+    }
+  }
+  return uvT;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <Kind kind, u32 m, u32 n, typename T>
+constexpr auto chain_rule(const matrix<kind, m, n, T> & df_dx, const T & dx) {
+
+  using output_t = decltype(inner(T{}, T{}));
+
+  if constexpr (kind == Kind::Isotropic) {
+    return matrix<kind, m, n, output_t>{inner(df_dx.data, dx)};
+  }
+
+  if constexpr (kind == Kind::Diagonal) {
+    matrix<kind, m, n, output_t> df{};
+    for (u32 k = 0; k < n; k++) {
+      df.data[k] = inner(df_dx.data[k], dx);
+    }
+    return df;
+  }
+
+  if constexpr (kind == Kind::Skew || kind == Kind::Symmetric) {
+    matrix<kind, m, n, output_t> df{};
+    for (u32 k = 0; k < decltype(df_dx)::num_values; k++) {
+      df.data[k] = inner(df_dx.data[k], dx);
+    }
+    return df;
+  }
+
+  if constexpr (kind == Kind::Rotation) {
+    matrix<kind, m, n, output_t> df{};
+    if constexpr (m == 2) {
+      df.s = inner(df_dx.s, dx);
+      df.c = inner(df_dx.c, dx);
+    }
+    if constexpr (m == 3) {
+      df.s[0] = inner(df_dx.s[0], dx);
+      df.s[1] = inner(df_dx.s[1], dx);
+      df.s[2] = inner(df_dx.s[2], dx);
+      df.c = inner(df_dx.c, dx);
+    }
+    return df;
+  }
+
+  if constexpr (kind == Kind::General) {
+    matrix<kind, m, n, output_t> df{};
+    for (u32 i = 0; i < m; i++) {
+      for (u32 j = 0; j < n; j++) {
+        df(i,j) = inner(df_dx(i,j), dx);
+      }
+    }
+    return df;
+  }
+
+}
+
 }  // namespace fm
 
 #include "fm/operations/dot.hpp"
@@ -341,5 +409,4 @@ std::ostream & operator<<(std::ostream & out, const matrix<k, m, n, T> & A) {
 #include "fm/operations/linear_solve.hpp"
 #include "fm/operations/norm.hpp"
 #include "fm/operations/operator_overloads.hpp"
-#include "fm/operations/outer.hpp"
 #include "fm/operations/transpose.hpp"

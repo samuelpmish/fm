@@ -222,4 +222,11 @@ constexpr auto ddot(const matrix<kindA, m, n, TA> & A,
 
 }
 
+/// returns A(i,j) B(i,j)
+template < Kind kindA, Kind kindB, u32 m, u32 n, typename TA, typename TB>
+constexpr auto inner(const matrix<kindA, m, n, TA> & A, 
+                     const matrix<kindB, m, n, TB> & B) {
+  return ddot(A, B);
+}
+
 }
