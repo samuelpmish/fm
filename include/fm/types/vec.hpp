@@ -39,11 +39,6 @@ struct vec {
     data[3] = d;
   }
 
-  // only allow implicit conversion to `T` when the vec is degenerate
-  constexpr operator typename std::conditional<dim == 1, T, void>::type () const {
-    return data[0];
-  }
-
   constexpr T & operator[](uint32_t i) { return data[i]; }
   constexpr const T & operator[](uint32_t i) const { return data[i]; }
 
@@ -51,7 +46,27 @@ struct vec {
   constexpr const T & operator()(uint32_t i) const { return data[i]; }
 
   T data[dim];
+};
 
+template < typename T >
+struct vec<1, T> { 
+  using data_type = T;
+  static constexpr int dimension = 1;
+
+  constexpr vec() : data{} {}
+
+  constexpr vec(T a) : data{a} {}
+
+  // only allow implicit conversion to `T` when the vec is degenerate
+  constexpr operator T() const { return data; }
+
+  constexpr T & operator[](uint32_t) { return data; }
+  constexpr const T & operator[](uint32_t) const { return data; }
+
+  constexpr T & operator()(uint32_t) { return data; }
+  constexpr const T & operator()(uint32_t) const { return data; }
+
+  T data;
 };
 
 template < uint32_t dim, typename T = float >
