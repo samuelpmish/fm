@@ -21,6 +21,19 @@ __device__ bool pass;
     pass = false;                                              \
     printf("Test failed on line %s:%d\n", __FILE__, __LINE__); \
   }
+
+#define CUDA_EXPECT_TRUE(A)                                    \
+  if (!(A)) {                                                  \
+    pass = false;                                              \
+    printf("Test failed on line %s:%d\n", __FILE__, __LINE__); \
+  }
+
+#define CUDA_EXPECT_FALSE(A)                                   \
+  if ((A)) {                                                   \
+    pass = false;                                              \
+    printf("Test failed on line %s:%d\n", __FILE__, __LINE__); \
+  }
+
 #endif
 
 static constexpr float eps = 1.0e-15;

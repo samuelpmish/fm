@@ -294,72 +294,7 @@ __host__ __device__ constexpr vec<3,T> cross(const vec<3,T> & u, const vec<3,T> 
   };
 }
 
-////////////////////////////////////////////////////////////////////////////////
 
-template < uint32_t n, typename T>
-__host__ __device__ constexpr vec<n,T> abs(const vec<n,T> & v) {
-  vec<n,T> absv{};
-  for (int i = 0; i < n; i++) {
-    absv[i] = std::abs(v[i]);
-  }
-  return absv;
-}
-
-template < uint32_t n, typename T >
-__host__ __device__ constexpr T min(const vec<n,T> & v) { 
-  T minval = v[0];
-  for (int i = 0; i < n; i++) {
-    minval = std::min(minval, v[i]);
-  }
-  return minval;
-}
-
-template < uint32_t n, typename T >
-__host__ __device__ constexpr vec<n,T> min(const vec<n,T> & v, T value) {
-  vec<n,T> out{};
-  for (int i = 0; i < n; i++) {
-    out[i] = std::min(v[i], value);
-  }
-  return out;
-}
-
-template < uint32_t n, typename T >
-__host__ __device__ constexpr vec<n,T> min(T value, const vec<n,T> & v) { return min(v, value); }
-
-template < uint32_t n, typename T >
-__host__ __device__ constexpr T max(const vec<n,T> & v) { 
-  T maxval = v[0];
-  for (int i = 0; i < n; i++) {
-    maxval = std::max(maxval, v[i]);
-  }
-  return maxval;
-}
-
-template < uint32_t n, typename T >
-__host__ __device__ constexpr vec<n,T> max(const vec<n,T> & v, T value) {
-  vec<n,T> out{};
-  for (int i = 0; i < n; i++) {
-    out[i] = std::max(v[i], value);
-  }
-  return out;
-}
-
-template < int n, typename T >
-__host__ __device__ constexpr vec<n,T> max(T value, const vec<n,T> & v) { return max(v, value); }
-
-template < typename T >
-__host__ __device__ constexpr T clamp(const T & value, const T & lower, const T & upper) {
-  return std::max(lower, std::min(value, upper));
-}
-
-template < uint32_t n, typename T >
-__host__ __device__ constexpr vec<n,T> clamp(const vec<n,T> & v, T lower, T upper) {
-  vec<n,T> out{};
-  for (uint32_t i = 0; i < n; i++) {
-    out[i] = clamp(v[i], lower, upper);
-  }
-  return out;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -400,5 +335,6 @@ __host__ __device__ constexpr int tensor_rank(vec<n,T>) { return 1; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 }
+
+#include "fm/operations/min_max_abs.hpp"
