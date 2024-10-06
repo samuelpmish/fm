@@ -4,7 +4,7 @@ namespace fm {
 
 /// frobenius norm of a matrix
 template < Kind kind, u32 dim, typename T >
-constexpr auto norm(const matrix<kind, dim, dim, T> & A) {
+__host__ __device__ constexpr auto norm(const matrix<kind, dim, dim, T> & A) {
 
   if constexpr (kind == Kind::General || kind == Kind::Symmetric) {
     T total{};

@@ -3,6 +3,7 @@
 #include "fm/type_aliases.hpp"
 
 #include "fm/types/vec.hpp"
+#include "fm/macros.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -26,24 +27,24 @@ struct matrix;
 template <u32 dim, typename T>
 struct matrix<Kind::Isotropic, dim, dim, T> {
   using type = T;
-  static constexpr u32 nrows() { return dim; }
-  static constexpr u32 ncols() { return dim; }
+  __host__ __device__ static constexpr u32 nrows() { return dim; }
+  __host__ __device__ static constexpr u32 ncols() { return dim; }
 
-  constexpr const auto operator[](u32 i) const { 
+  __host__ __device__ constexpr const auto operator[](u32 i) const { 
     vec<dim,T> output{};
     output[i] = data;
     return output;
   }
 
-  constexpr const auto operator()(u32 i) const { 
+  __host__ __device__ constexpr const auto operator()(u32 i) const { 
     vec<dim,T> output{};
     output[i] = data;
     return output;
   }
 
-  constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data; }
+  __host__ __device__ constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data; }
 
-  constexpr operator matrix<Kind::General, dim, dim, T>() const {
+  __host__ __device__ constexpr operator matrix<Kind::General, dim, dim, T>() const {
     matrix<Kind::General, dim, dim, T> output{};
     for (u32 i = 0; i < dim; i++) {
       output(i,i) = data;
@@ -63,11 +64,12 @@ using iso3 = matrix<Kind::Isotropic, 3, 3, double>;
 template <u32 dim, typename T>
 struct matrix<Kind::Diagonal, dim, dim, T> {
   using type = T;
-  static constexpr u32 nrows() { return dim; }
-  static constexpr u32 ncols() { return dim; }
-  constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data[i]; }
+  __host__ __device__ static constexpr u32 nrows() { return dim; }
+  __host__ __device__ static constexpr u32 ncols() { return dim; }
 
-  constexpr operator matrix<Kind::General, dim, dim, T>() const {
+  __host__ __device__ constexpr const auto operator()(u32 i, u32 j) const { return (i == j) * data[i]; }
+
+  __host__ __device__ constexpr operator matrix<Kind::General, dim, dim, T>() const {
     matrix<Kind::General, dim, dim, T> output{};
     for (u32 i = 0; i < dim; i++) {
       output(i,i) = data[i];
@@ -87,15 +89,15 @@ using diag3 = matrix<Kind::Diagonal, 3, 3, double>;
 template <typename T>
 struct matrix<Kind::Skew, 2, 2, T> {
   using type = T;
-  static constexpr u32 nrows() { return 2; }
-  static constexpr u32 ncols() { return 2; }
+  __host__ __device__ static constexpr u32 nrows() { return 2; }
+  __host__ __device__ static constexpr u32 ncols() { return 2; }
   static constexpr u32 num_values = 1;
 
-  const auto operator()(u32 i, u32 j) const { 
+  __host__ __device__ constexpr const auto operator()(u32 i, u32 j) const { 
     return data * (i != j) * ((j < i) ? 1 : -1);
   }
 
-  constexpr operator matrix<Kind::General, 2, 2, T>() const {
+  __host__ __device__ constexpr operator matrix<Kind::General, 2, 2, T>() const {
     return {{{0.0, -data}, {data, 0.0}}};
   }
 
@@ -105,11 +107,11 @@ struct matrix<Kind::Skew, 2, 2, T> {
 template <typename T>
 struct matrix<Kind::Skew, 3, 3, T> {
   using type = T;
-  static constexpr u32 nrows() { return 3; }
-  static constexpr u32 ncols() { return 3; }
+  __host__ __device__ static constexpr u32 nrows() { return 3; }
+  __host__ __device__ static constexpr u32 ncols() { return 3; }
   static constexpr u32 num_values = 3;
 
-  constexpr const auto operator()(u32 i, u32 j) const { 
+  __host__ __device__ constexpr const auto operator()(u32 i, u32 j) const { 
     if (i == j) return 0.0;
     if (i == 0 && j == 1) return -data[2];
     if (i == 1 && j == 0) return  data[2];
@@ -121,7 +123,7 @@ struct matrix<Kind::Skew, 3, 3, T> {
     return T{};
   }
 
-  constexpr operator matrix<Kind::General, 3, 3, T>() const {
+  __host__ __device__ constexpr operator matrix<Kind::General, 3, 3, T>() const {
     return {{
       {     0.0, -data[2], +data[1]}, 
       {+data[2],      0.0, -data[0]},
@@ -142,13 +144,13 @@ using skew3 = matrix<Kind::Skew, 3, 3, double>;
 template <typename T>
 struct matrix<Kind::Rotation, 2, 2, T> {
   using type = T;
-  static constexpr u32 nrows() { return 2; }
-  static constexpr u32 ncols() { return 2; }
-  constexpr const auto operator()(u32 i, u32 j) const { 
+  __host__ __device__ static constexpr u32 nrows() { return 2; }
+  __host__ __device__ static constexpr u32 ncols() { return 2; }
+  __host__ __device__ constexpr const auto operator()(u32 i, u32 j) const { 
     return (i == j) * c + (i32(i) - i32(j)) * s;
   }
 
-  constexpr operator matrix<Kind::General, 2, 2, T>() const {
+  __host__ __device__ constexpr operator matrix<Kind::General, 2, 2, T>() const {
     return {{{c, -s}, {s, c}}};
   }
 
@@ -159,9 +161,9 @@ struct matrix<Kind::Rotation, 2, 2, T> {
 template <typename T>
 struct matrix<Kind::Rotation, 3, 3, T> {
   using type = T;
-  static constexpr u32 nrows() { return 3; }
-  static constexpr u32 ncols() { return 3; }
-  constexpr const auto operator()(u32 i, u32 j) const { 
+  __host__ __device__ static constexpr u32 nrows() { return 3; }
+  __host__ __device__ static constexpr u32 ncols() { return 3; }
+  __host__ __device__ constexpr const auto operator()(u32 i, u32 j) const { 
     if (i == 0 && j == 0) return 1-2*(s[1]*s[1]+s[2]*s[2]);
     if (i == 0 && j == 1) return   2*(s[0]*s[1]-   c*s[2]);
     if (i == 0 && j == 2) return   2*(s[0]*s[2]+   c*s[1]);
@@ -175,7 +177,7 @@ struct matrix<Kind::Rotation, 3, 3, T> {
     return T{};
   }
 
-  constexpr operator matrix<Kind::General, 3, 3, T>() const {
+  __host__ __device__ constexpr operator matrix<Kind::General, 3, 3, T>() const {
     return {{
       {1-2*(s[1]*s[1]+s[2]*s[2]),   2*(s[0]*s[1]-   c*s[2]),   2*(s[0]*s[2]+   c*s[1])},
       {  2*(s[0]*s[1]+   c*s[2]), 1-2*(s[0]*s[0]+s[2]*s[2]),   2*(s[1]*s[2]-   c*s[0])},
@@ -193,12 +195,12 @@ using rot2 = matrix<Kind::Rotation, 2, 2, double>;
 using rot3 = matrix<Kind::Rotation, 3, 3, double>;
 
 template < typename T >
-matrix<Kind::Rotation, 2, 2, T> RotationMatrix(T angle) {
+__host__ __device__ constexpr matrix<Kind::Rotation, 2, 2, T> RotationMatrix(T angle) {
   return {cos(angle), sin(angle)};
 }
 
 template < typename T >
-rot<3,T> RotationMatrix(const vec<3,T> & axis_angle) {
+__host__ __device__ constexpr rot<3,T> RotationMatrix(const vec<3,T> & axis_angle) {
   T theta = norm(axis_angle);
   vec<3,T> normalized_axis = axis_angle / theta;
   return {std::cos(theta / 2), std::sin(theta / 2) * normalized_axis};
@@ -209,20 +211,27 @@ rot<3,T> RotationMatrix(const vec<3,T> & axis_angle) {
 template <u32 dim, typename T>
 struct matrix<Kind::Symmetric, dim, dim, T> {
   using type = T;
-  static constexpr u32 nrows() { return dim; }
-  static constexpr u32 ncols() { return dim; }
+  __host__ __device__ static constexpr u32 nrows() { return dim; }
+  __host__ __device__ static constexpr u32 ncols() { return dim; }
+
   static constexpr u32 num_values = (dim*(dim+1)) / 2;
 
-  constexpr auto & operator()(u32 i, u32 j) { return data[index(i,j)]; }
-  constexpr const auto & operator()(u32 i, u32 j) const { return data[index(i,j)]; }
+  __host__ __device__ constexpr auto & operator()(u32 i, u32 j) { return data[index(i,j)]; }
+  __host__ __device__ constexpr const auto & operator()(u32 i, u32 j) const { return data[index(i,j)]; }
 
-  constexpr u32 index(u32 i, u32 j) const {
-    u32 i_upper = std::min(i, j);
-    u32 j_upper = std::max(i, j);
+  __host__ __device__ constexpr u32 index(u32 i, u32 j) const {
+    #ifdef __CUDACC__
+      u32 i_upper = (i < j) ? i : j;
+      u32 j_upper = (i < j) ? j : i;
+    #else
+      u32 i_upper = std::min(i, j);
+      u32 j_upper = std::max(i, j);
+    #endif
+
     return j_upper + ((2 * dim - i_upper - 1) * i_upper) / 2;
   }
 
-  constexpr operator matrix<Kind::General, dim, dim, T>() const {
+  __host__ __device__ constexpr operator matrix<Kind::General, dim, dim, T>() const {
     matrix<Kind::General, dim, dim, T> output;
     for (u32 i = 0; i < dim; i++) {
       for (u32 j = 0; j < dim; j++) {
@@ -245,14 +254,14 @@ using sym3 = matrix<Kind::Symmetric, 3, 3, double>;
 template <u32 rows, u32 cols, typename T>
 struct matrix<Kind::General, rows, cols, T> {
   using type = T;
-  static constexpr u32 nrows() { return rows; }
-  static constexpr u32 ncols() { return cols; }
+  __host__ __device__ static constexpr u32 nrows() { return rows; }
+  __host__ __device__ static constexpr u32 ncols() { return cols; }
 
-  constexpr auto & operator()(u32 i, u32 j) { return data[i][j]; }
-  constexpr const auto & operator()(u32 i, u32 j) const { return data[i][j]; }
+  __host__ __device__ constexpr auto & operator()(u32 i, u32 j) { return data[i][j]; }
+  __host__ __device__ constexpr const auto & operator()(u32 i, u32 j) const { return data[i][j]; }
 
-  constexpr auto & operator[](u32 i) { return data[i]; }
-  constexpr const auto & operator[](u32 i) const { return data[i]; }
+  __host__ __device__ constexpr auto & operator[](u32 i) { return data[i]; }
+  __host__ __device__ constexpr const auto & operator[](u32 i) const { return data[i]; }
 
   vec<cols, T> data[rows];
 };
@@ -283,15 +292,15 @@ using mat4x2f = matrix<Kind::General, 4, 2, float>;
 using mat4x3f = matrix<Kind::General, 4, 3, float>;
 
 template < Kind k, uint32_t m, uint32_t n, typename T >
-constexpr int tensor_rank(matrix<k,m,n,T>) { return 2; }
+__host__ __device__ constexpr int tensor_rank(matrix<k,m,n,T>) { return 2; }
 
 template <int dim, typename T=double>
-constexpr iso<dim, T> Identity() {
+__host__ __device__ constexpr iso<dim, T> Identity() {
   return iso<dim,T>{1.0};
 }
 
 template < typename T >
-constexpr mat<3,3,T> to_3x3(const mat<2,2,T> & A) {
+__host__ __device__ constexpr mat<3,3,T> to_3x3(const mat<2,2,T> & A) {
   return mat<3,3,T>{{
     {A[0][0], A[0][1], 0.0},
     {A[1][0], A[1][1], 0.0},
@@ -300,7 +309,7 @@ constexpr mat<3,3,T> to_3x3(const mat<2,2,T> & A) {
 }
  
 template < typename T >
-constexpr mat<2,2,T> to_2x2(const mat<3,3,T> & A) {
+__host__ __device__ constexpr mat<2,2,T> to_2x2(const mat<3,3,T> & A) {
   return mat<2,2,T>{{
     {A[0][0], A[0][1]},
     {A[1][0], A[1][1]}
@@ -308,7 +317,7 @@ constexpr mat<2,2,T> to_2x2(const mat<3,3,T> & A) {
 }
 
 template < typename T>
-vec<3,T> cross(const mat<3,2,T> & A) { 
+__host__ __device__ vec<3,T> cross(const mat<3,2,T> & A) { 
   return vec<3, T>{
     A(1,0)*A(2,1)-A(2,0)*A(1,1),
     A(2,0)*A(0,1)-A(0,0)*A(2,1),
@@ -317,7 +326,7 @@ vec<3,T> cross(const mat<3,2,T> & A) {
 }
 
 template < typename T>
-vec<2,T> cross(const mat<2,1,T> & A) { 
+__host__ __device__ vec<2,T> cross(const mat<2,1,T> & A) { 
   return vec<2, T>{A(1,0), -A(0,0)};
 }
 
@@ -336,7 +345,7 @@ std::ostream & operator<<(std::ostream & out, const matrix<k, m, n, T> & A) {
 }
 
 template <typename S, typename T, u32 m, u32 n>
-constexpr auto outer(const vec<m,S> & u, const vec<n,T> & v) {
+__host__ __device__ constexpr auto outer(const vec<m,S> & u, const vec<n,T> & v) {
   mat<m,n,decltype(S{} * T{})> uvT{};
   for (u32 i = 0; i < m; i++) {
     for (u32 j = 0; j < n; j++) {
@@ -349,7 +358,7 @@ constexpr auto outer(const vec<m,S> & u, const vec<n,T> & v) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <Kind kind, u32 m, u32 n, typename T>
-constexpr auto chain_rule(const matrix<kind, m, n, T> & df_dx, const T & dx) {
+__host__ __device__ constexpr auto chain_rule(const matrix<kind, m, n, T> & df_dx, const T & dx) {
 
   using output_t = decltype(inner(T{}, T{}));
 

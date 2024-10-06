@@ -6,11 +6,9 @@ TEST(UnitTest, ISO2D) {
 
   EXPECT_EQ((I1 + I2).data, 2.25f);
   EXPECT_EQ((I1 - I2).data, 1.75f);
-  EXPECT_EQ((I1 * I2).data, 0.5f);
-  EXPECT_EQ((I1 / I2).data, 8.0f);
   EXPECT_EQ(dot(I1, I2).data, 0.5f);
-  EXPECT_EQ((I1 * inv(I2)).data, 8.0f);
-  EXPECT_EQ(det(I1 * inv(I2)), 64.0f);
+  EXPECT_EQ(dot(I1, inv(I2)).data, 8.0f);
+  EXPECT_EQ(det(dot(I1, inv(I2))), 64.0f);
 }
 
 TEST(UnitTest, ISO3D) {
@@ -19,9 +17,7 @@ TEST(UnitTest, ISO3D) {
 
   EXPECT_EQ((I1 + I2).data, 2.25f);
   EXPECT_EQ((I1 - I2).data, 1.75f);
-  EXPECT_EQ((I1 * I2).data, 0.5f);
-  EXPECT_EQ((I1 / I2).data, 8.0f);
   EXPECT_EQ(dot(I1, I2).data, 0.5f);
-  EXPECT_EQ((I1 * inv(I2)).data, 8.0f);
-  EXPECT_EQ(det(I1 * inv(I2)), 512.0f);
+  EXPECT_EQ(dot(I1, inv(I2)).data, 8.0f);
+  EXPECT_EQ(det(dot(I1, inv(I2))), 512.0f);
 }

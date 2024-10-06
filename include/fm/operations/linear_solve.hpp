@@ -6,7 +6,7 @@
 namespace fm {
 
 template < Kind kind, uint32_t n, typename T >
-constexpr auto linear_solve(const matrix<kind, n, n, T>& A, const vec<n,T>& b) {
+__host__ __device__ constexpr auto linear_solve(const matrix<kind, n, n, T>& A, const vec<n,T>& b) {
 
   vec<n,T> x{};
 

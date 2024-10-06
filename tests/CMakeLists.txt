@@ -25,3 +25,25 @@ foreach(filename ${cpp_tests})
   add_test(${testname} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${testname})		
 
 endforeach(filename ${cpp_tests})
+
+if (FM_ENABLE_CUDA)
+  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES native)
+  endif()
+
+  enable_language(CUDA)
+
+  file(GLOB cu_tests ${PROJECT_SOURCE_DIR}/tests/*.cu)
+
+  foreach(filename ${cu_tests})		
+
+    get_filename_component(testname ${filename} NAME_WE)
+
+    add_executable(cuda_${testname} ${filename})
+    target_link_libraries(cuda_${testname} PUBLIC fm GTest::gtest_main)
+
+    add_test(cuda_${testname} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cuda_${testname})		
+
+  endforeach(filename ${cu_tests})
+
+endif()

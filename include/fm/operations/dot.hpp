@@ -3,7 +3,7 @@
 namespace fm {
 
 template < Kind kind, u32 m, u32 n, typename S, typename T>
-constexpr auto dot(const vec<m, S> & x, const matrix<kind, m, n, T> & A) {
+__host__ __device__ constexpr auto dot(const vec<m, S> & x, const matrix<kind, m, n, T> & A) {
 
   if constexpr (kind == Kind::Isotropic || kind == Kind::Diagonal) {
     static_assert(m == n);
@@ -30,7 +30,7 @@ constexpr auto dot(const vec<m, S> & x, const matrix<kind, m, n, T> & A) {
 }
 
 template < Kind kind, u32 m, u32 n, typename S, typename T>
-constexpr auto dot(const matrix<kind, m, n, S> & A, const vec<n, T> & x) {
+__host__ __device__ constexpr auto dot(const matrix<kind, m, n, S> & A, const vec<n, T> & x) {
 
   if constexpr (kind == Kind::Isotropic || kind == Kind::Diagonal) {
     static_assert(m == n);
@@ -57,7 +57,7 @@ constexpr auto dot(const matrix<kind, m, n, S> & A, const vec<n, T> & x) {
 }
 
 template < Kind kindA, Kind kindB, u32 m, u32 n, u32 p, typename TA, typename TB>
-constexpr auto dot(const matrix<kindA, m, n, TA> & A, 
+__host__ __device__ constexpr auto dot(const matrix<kindA, m, n, TA> & A, 
                    const matrix<kindB, n, p, TB> & B) {
 
   using T = decltype(TA{} * TB{});
@@ -118,8 +118,8 @@ constexpr auto dot(const matrix<kindA, m, n, TA> & A,
 
 /// returns A(i,j) B(i,j)
 template < Kind kindA, Kind kindB, u32 m, u32 n, typename TA, typename TB>
-constexpr auto ddot(const matrix<kindA, m, n, TA> & A, 
-                    const matrix<kindB, m, n, TB> & B) {
+__host__ __device__ constexpr auto ddot(const matrix<kindA, m, n, TA> & A, 
+                                        const matrix<kindB, m, n, TB> & B) {
 
   using T = decltype(TA{} * TB{});
 
@@ -224,8 +224,8 @@ constexpr auto ddot(const matrix<kindA, m, n, TA> & A,
 
 /// returns A(i,j) B(i,j)
 template < Kind kindA, Kind kindB, u32 m, u32 n, typename TA, typename TB>
-constexpr auto inner(const matrix<kindA, m, n, TA> & A, 
-                     const matrix<kindB, m, n, TB> & B) {
+__host__ __device__ constexpr auto inner(const matrix<kindA, m, n, TA> & A, 
+                                         const matrix<kindB, m, n, TB> & B) {
   return ddot(A, B);
 }
 

@@ -8,7 +8,7 @@ namespace fm {
 constexpr auto inv(const double & A) { return 1.0 / A; }
 
 template < Kind kind, u32 dim, typename T >
-constexpr auto inv(const matrix<kind, dim, dim, T> & A) {
+__host__ __device__ constexpr auto inv(const matrix<kind, dim, dim, T> & A) {
 
   using matrix_type = matrix<kind, dim, dim, T>;
 
@@ -94,7 +94,7 @@ constexpr auto inv(const matrix<kind, dim, dim, T> & A) {
   }
 
   if constexpr (kind == Kind::Isotropic) {
-    return matrix_type{1.0 / A.data};
+    return matrix_type{T(1.0) / A.data};
   }
 
 }

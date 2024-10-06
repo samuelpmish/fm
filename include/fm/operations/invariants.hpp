@@ -2,12 +2,12 @@
 
 namespace fm {
 
-constexpr auto tr(const double & A) {
+__host__ __device__ constexpr auto tr(const double & A) {
   return A;
 }
 
 template < Kind kind, u32 dim, typename T >
-constexpr auto tr(const matrix<kind, dim, dim, T> & A) {
+__host__ __device__ constexpr auto tr(const matrix<kind, dim, dim, T> & A) {
 
   if constexpr (kind == Kind::General || kind == Kind::Symmetric) {
     if constexpr (dim == 1) return A(0,0);
@@ -36,12 +36,12 @@ constexpr auto tr(const matrix<kind, dim, dim, T> & A) {
 
 }
 
-constexpr auto det(const double & A) {
+__host__ __device__ constexpr auto det(const double & A) {
   return A;
 }
 
 template < Kind kind, u32 dim, typename T >
-constexpr auto det(const matrix<kind, dim, dim, T> & A) {
+__host__ __device__ constexpr auto det(const matrix<kind, dim, dim, T> & A) {
 
   if constexpr (kind == Kind::General || kind == Kind::Symmetric) {
     if constexpr (dim == 1) {
@@ -77,7 +77,7 @@ constexpr auto det(const matrix<kind, dim, dim, T> & A) {
 }
 
 template < u32 which, Kind kind, u32 dim, typename T >
-constexpr auto invariant(const matrix<kind, dim, dim, T> & A) {
+__host__ __device__ constexpr auto invariant(const matrix<kind, dim, dim, T> & A) {
 
   static_assert(dim == 2 || dim == 3, "invariants only defined for 2x2 and 3x3 matrices");
 

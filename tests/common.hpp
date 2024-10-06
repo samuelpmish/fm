@@ -8,8 +8,25 @@
 #include "fm/operations/dot.hpp"
 #include "fm/operations/print.hpp"
 
+#ifdef __CUDACC__
+__device__ bool pass;
+#define CUDA_EXPECT_NEAR(A, B, tolerance)                      \
+  if (fabs((A) - (B)) > tolerance) {                           \
+    pass = false;                                              \
+    printf("Test failed on line %s:%d\n", __FILE__, __LINE__); \
+  }
+
+#define CUDA_EXPECT_EQ(A, B)                                   \
+  if ((A) != (B)) {                                            \
+    pass = false;                                              \
+    printf("Test failed on line %s:%d\n", __FILE__, __LINE__); \
+  }
+#endif
+
 static constexpr float eps = 1.0e-15;
 static constexpr float epsf = 1.0e-7f;
+
+using namespace fm;
 
 namespace fm {
 

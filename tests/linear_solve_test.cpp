@@ -5,8 +5,8 @@
 
 double tolerance = 1.0e-14;
 
-diag<2, double> D2{4.0, 2.0};
-diag<3, double> D3{2.0, 4.0, 8.0};
+diag<2, double> D2{{4.0, 2.0}};
+diag<3, double> D3{{2.0, 4.0, 8.0}};
 
 iso<2, double> I2{2.0};
 iso<3, double> I3{4.0};
@@ -16,11 +16,11 @@ sym<2, double> S2{{
        2.0
 }};
 
-sym<3, double> S3{{
+sym<3, double> S3{{{
   -2.0,  1.0,  0.0,
         -2.0,  1.0,
               -2.0
-}};
+}}};
 
 mat<2,2,double> M2{{
   {5, 3},

@@ -5,7 +5,7 @@
 namespace fm {
 
 template <Kind kind, u32 rows, u32 cols, typename T>
-constexpr auto transpose(const matrix<kind, rows, cols, T>& A) {
+__host__ __device__ constexpr auto transpose(const matrix<kind, rows, cols, T>& A) {
   if constexpr (kind == Kind::Isotropic || kind == Kind::Diagonal ||
                 kind == Kind::Symmetric) {
     return A;

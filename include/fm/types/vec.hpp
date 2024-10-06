@@ -4,6 +4,8 @@
 #include <iostream>
 #include <algorithm> // for std::{min,max}
 
+#include "fm/macros.hpp"
+
 namespace fm {
 
 template < uint32_t dim, typename T = double >
@@ -11,27 +13,22 @@ struct vec {
   using data_type = T;
   static constexpr int dimension = dim;
 
-  constexpr vec() : data{} {}
+  __host__ __device__ constexpr vec() : data{} {}
 
-  constexpr vec(T a) {
-    static_assert(dim == 1, "vec(T) only supported for vec<1,T>");
-    data[0] = a;
-  }
-
-  constexpr vec(T a, T b) {
+  __host__ __device__ constexpr vec(T a, T b) {
     static_assert(dim == 2, "vec(T, T) only supported for vec<2,T>");
     data[0] = a;
     data[1] = b;
   }
 
-  constexpr vec(T a, T b, T c) {
+  __host__ __device__ constexpr vec(T a, T b, T c) {
     static_assert(dim == 3, "vec(T, T, T) only supported for vec<3,T>");
     data[0] = a;
     data[1] = b;
     data[2] = c;
   }
 
-  constexpr vec(T a, T b, T c, T d) {
+  __host__ __device__ constexpr vec(T a, T b, T c, T d) {
     static_assert(dim == 4, "vec(T, T, T, T) only supported for vec<4,T>");
     data[0] = a;
     data[1] = b;
@@ -39,11 +36,17 @@ struct vec {
     data[3] = d;
   }
 
-  constexpr T & operator[](uint32_t i) { return data[i]; }
-  constexpr const T & operator[](uint32_t i) const { return data[i]; }
+  __host__ __device__ constexpr vec(const T (&values)[dim]) {
+    for (uint32_t i = 0; i < dim; i++) {
+      data[i] = values[i];
+    }
+  }
 
-  constexpr T & operator()(uint32_t i) { return data[i]; }
-  constexpr const T & operator()(uint32_t i) const { return data[i]; }
+  __host__ __device__ constexpr T & operator[](uint32_t i) { return data[i]; }
+  __host__ __device__ constexpr const T & operator[](uint32_t i) const { return data[i]; }
+
+  __host__ __device__ constexpr T & operator()(uint32_t i) { return data[i]; }
+  __host__ __device__ constexpr const T & operator()(uint32_t i) const { return data[i]; }
 
   T data[dim];
 };
@@ -53,18 +56,18 @@ struct vec<1, T> {
   using data_type = T;
   static constexpr int dimension = 1;
 
-  constexpr vec() : data{} {}
+  __host__ __device__ constexpr vec() : data{} {}
 
-  constexpr vec(T a) : data{a} {}
+  __host__ __device__ constexpr vec(T a) : data{a} {}
 
   // only allow implicit conversion to `T` when the vec is degenerate
-  constexpr operator T() const { return data; }
+  __host__ __device__ constexpr operator T() const { return data; }
 
-  constexpr T & operator[](uint32_t) { return data; }
-  constexpr const T & operator[](uint32_t) const { return data; }
+  __host__ __device__ constexpr T & operator[](uint32_t) { return data; }
+  __host__ __device__ constexpr const T & operator[](uint32_t) const { return data; }
 
-  constexpr T & operator()(uint32_t) { return data; }
-  constexpr const T & operator()(uint32_t) const { return data; }
+  __host__ __device__ constexpr T & operator()(uint32_t) { return data; }
+  __host__ __device__ constexpr const T & operator()(uint32_t) const { return data; }
 
   T data;
 };
@@ -87,29 +90,29 @@ using vec3 = vec<3, double>;
 using vec4f = vec<4, float>;
 using vec4 = vec<4, double>;
 
-constexpr uint32_t dimension(double) { return 1; }
+__host__ __device__ constexpr uint32_t dimension(double) { return 1; }
 
 template < uint32_t dim, typename T >
-constexpr uint32_t dimension(vec < dim, T >) { return dim; }
+__host__ __device__ constexpr uint32_t dimension(vec < dim, T >) { return dim; }
 
-constexpr auto outer(const double & u, const double & v) {
+__host__ __device__ constexpr auto outer(const double & u, const double & v) {
   return u * v;
 }
 
 template <typename T, int n>
-constexpr auto outer(const double & u, const vec<n,T> & v) {
+__host__ __device__ constexpr auto outer(const double & u, const vec<n,T> & v) {
   return u * v;
 }
 
 template <typename T, int n>
-constexpr auto outer(const vec<n,T> & u, const double & v) {
+__host__ __device__ constexpr auto outer(const vec<n,T> & u, const double & v) {
   return u * v;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template < uint32_t dim, typename S, typename T >
-constexpr auto operator!=(const vec< dim, S > & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator!=(const vec< dim, S > & u, const vec< dim, T > & v) {
   for (int i = 0; i < dim; i++) {
     if (u[i] != v[i]) return true;
   }
@@ -117,7 +120,7 @@ constexpr auto operator!=(const vec< dim, S > & u, const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename S, typename T >
-constexpr auto operator==(const vec< dim, S > & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator==(const vec< dim, S > & u, const vec< dim, T > & v) {
   for (uint32_t i = 0; i < dim; i++) {
     if (u[i] != v[i]) return false;
   }
@@ -125,22 +128,22 @@ constexpr auto operator==(const vec< dim, S > & u, const vec< dim, T > & v) {
 }
 
 template < uint32_t n, typename T >
-constexpr void operator*=(vec< n, T > & u, const T & v) {
+__host__ __device__ constexpr void operator*=(vec< n, T > & u, const T & v) {
   for (uint32_t i = 0; i < n; i++) u[i] *= v;
 }
 
 template < uint32_t n, typename T >
-constexpr void operator+=(vec< n, T > & u, const vec< n, T > & v) {
+__host__ __device__ constexpr void operator+=(vec< n, T > & u, const vec< n, T > & v) {
   for (uint32_t i = 0; i < n; i++) u[i] += v[i];
 }
 
 template < uint32_t n, typename T >
-constexpr void operator-=(vec< n, T > & u, const vec< n, T > & v) {
+__host__ __device__ constexpr void operator-=(vec< n, T > & u, const vec< n, T > & v) {
   for (uint32_t i = 0; i < n; i++) u[i] -= v[i];
 }
 
 template < uint32_t dim, typename S, typename T >
-constexpr auto operator+(const vec< dim, S > & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator+(const vec< dim, S > & u, const vec< dim, T > & v) {
   vec< dim, decltype(S{} + T{}) > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = u[i] + v[i];
@@ -149,7 +152,7 @@ constexpr auto operator+(const vec< dim, S > & u, const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename T >
-constexpr auto operator-(const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator-(const vec< dim, T > & v) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = -v[i];
@@ -158,7 +161,7 @@ constexpr auto operator-(const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename S, typename T >
-constexpr auto operator-(const vec< dim, S > & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator-(const vec< dim, S > & u, const vec< dim, T > & v) {
   vec< dim, decltype(S{} - T{}) > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = u[i] - v[i];
@@ -167,7 +170,7 @@ constexpr auto operator-(const vec< dim, S > & u, const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename S, typename T >
-constexpr auto operator*(const vec< dim, S > & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator*(const vec< dim, S > & u, const vec< dim, T > & v) {
   vec< dim, decltype(S{} * T{}) > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = u[i] * v[i];
@@ -176,7 +179,7 @@ constexpr auto operator*(const vec< dim, S > & u, const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename S, typename T >
-constexpr auto operator/(const vec< dim, S > & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator/(const vec< dim, S > & u, const vec< dim, T > & v) {
   vec< dim, decltype(S{} / T{}) > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = u[i] / v[i];
@@ -187,7 +190,7 @@ constexpr auto operator/(const vec< dim, S > & u, const vec< dim, T > & v) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template < uint32_t dim, typename T >
-constexpr auto operator*(const double & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator*(const double & u, const vec< dim, T > & v) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = u * v[i];
@@ -195,12 +198,12 @@ constexpr auto operator*(const double & u, const vec< dim, T > & v) {
   return out; 
 }
 
-constexpr double dot(const double & u, const double & v) {
+__host__ __device__ constexpr double dot(const double & u, const double & v) {
   return u * v;
 }
 
 template < uint32_t dim, typename T >
-constexpr auto dot(const T & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto dot(const T & u, const vec< dim, T > & v) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = u * v[i];
@@ -209,7 +212,7 @@ constexpr auto dot(const T & u, const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename T >
-constexpr auto operator*(const vec< dim, T > & v, const double & u) {
+__host__ __device__ constexpr auto operator*(const vec< dim, T > & v, const double & u) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = v[i] * u;
@@ -218,7 +221,7 @@ constexpr auto operator*(const vec< dim, T > & v, const double & u) {
 }
 
 template < uint32_t dim, typename T >
-constexpr auto dot(const vec< dim, T > & v, const T & u) {
+__host__ __device__ constexpr auto dot(const vec< dim, T > & v, const T & u) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = v[i] * u;
@@ -227,7 +230,7 @@ constexpr auto dot(const vec< dim, T > & v, const T & u) {
 }
 
 template < uint32_t dim, typename T >
-constexpr auto operator/(const double & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto operator/(const double & u, const vec< dim, T > & v) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = u / v[i];
@@ -236,7 +239,7 @@ constexpr auto operator/(const double & u, const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename T >
-constexpr auto operator/(const vec< dim, T > & v, const double & u) {
+__host__ __device__ constexpr auto operator/(const vec< dim, T > & v, const double & u) {
   vec< dim, T > out{};
   for (uint32_t i = 0; i < dim; i++) {
     out[i] = v[i] / u;
@@ -245,7 +248,7 @@ constexpr auto operator/(const vec< dim, T > & v, const double & u) {
 }
 
 template < uint32_t dim, typename T >
-constexpr auto norm_squared(const vec< dim, T > & v) {
+__host__ __device__ constexpr auto norm_squared(const vec< dim, T > & v) {
   T out{};
   for (uint32_t i = 0; i < dim; i++) {
     out += v[i] * v[i];
@@ -254,7 +257,7 @@ constexpr auto norm_squared(const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename T >
-constexpr auto norm(const vec< dim, T > & v) {
+__host__ __device__ constexpr auto norm(const vec< dim, T > & v) {
   T out{};
   for (uint32_t i = 0; i < dim; i++) {
     out += v[i] * v[i];
@@ -263,7 +266,7 @@ constexpr auto norm(const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename T >
-constexpr auto normalize(const vec< dim, T > & v) {
+__host__ __device__ constexpr auto normalize(const vec< dim, T > & v) {
   T norm_v = norm(v);
   if (norm_v != 0) {
     return v / norm_v;
@@ -273,7 +276,7 @@ constexpr auto normalize(const vec< dim, T > & v) {
 }
 
 template < uint32_t dim, typename S, typename T >
-constexpr auto dot(const vec< dim, S > & u, const vec< dim, T > & v) {
+__host__ __device__ constexpr auto dot(const vec< dim, S > & u, const vec< dim, T > & v) {
   decltype(S{} / T{}) total{};
   for (uint32_t i = 0; i < dim; i++) {
     total += u[i] * v[i];
@@ -283,7 +286,7 @@ constexpr auto dot(const vec< dim, S > & u, const vec< dim, T > & v) {
 
 // vector-vector products
 template <typename T>
-constexpr vec<3,T> cross(const vec<3,T> & u, const vec<3,T> & v) {
+__host__ __device__ constexpr vec<3,T> cross(const vec<3,T> & u, const vec<3,T> & v) {
   return vec<3,T>{
     u[1] * v[2] - u[2] * v[1], 
     u[2] * v[0] - u[0] * v[2],
@@ -294,7 +297,7 @@ constexpr vec<3,T> cross(const vec<3,T> & u, const vec<3,T> & v) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template < uint32_t n, typename T>
-constexpr vec<n,T> abs(const vec<n,T> & v) {
+__host__ __device__ constexpr vec<n,T> abs(const vec<n,T> & v) {
   vec<n,T> absv{};
   for (int i = 0; i < n; i++) {
     absv[i] = std::abs(v[i]);
@@ -303,7 +306,7 @@ constexpr vec<n,T> abs(const vec<n,T> & v) {
 }
 
 template < uint32_t n, typename T >
-constexpr T min(const vec<n,T> & v) { 
+__host__ __device__ constexpr T min(const vec<n,T> & v) { 
   T minval = v[0];
   for (int i = 0; i < n; i++) {
     minval = std::min(minval, v[i]);
@@ -312,7 +315,7 @@ constexpr T min(const vec<n,T> & v) {
 }
 
 template < uint32_t n, typename T >
-inline vec<n,T> min(const vec<n,T> & v, T value) {
+__host__ __device__ constexpr vec<n,T> min(const vec<n,T> & v, T value) {
   vec<n,T> out{};
   for (int i = 0; i < n; i++) {
     out[i] = std::min(v[i], value);
@@ -321,10 +324,10 @@ inline vec<n,T> min(const vec<n,T> & v, T value) {
 }
 
 template < uint32_t n, typename T >
-inline vec<n,T> min(T value, const vec<n,T> & v) { return min(v, value); }
+__host__ __device__ constexpr vec<n,T> min(T value, const vec<n,T> & v) { return min(v, value); }
 
 template < uint32_t n, typename T >
-constexpr T max(const vec<n,T> & v) { 
+__host__ __device__ constexpr T max(const vec<n,T> & v) { 
   T maxval = v[0];
   for (int i = 0; i < n; i++) {
     maxval = std::max(maxval, v[i]);
@@ -333,7 +336,7 @@ constexpr T max(const vec<n,T> & v) {
 }
 
 template < uint32_t n, typename T >
-constexpr vec<n,T> max(const vec<n,T> & v, T value) {
+__host__ __device__ constexpr vec<n,T> max(const vec<n,T> & v, T value) {
   vec<n,T> out{};
   for (int i = 0; i < n; i++) {
     out[i] = std::max(v[i], value);
@@ -342,15 +345,15 @@ constexpr vec<n,T> max(const vec<n,T> & v, T value) {
 }
 
 template < int n, typename T >
-constexpr vec<n,T> max(T value, const vec<n,T> & v) { return max(v, value); }
+__host__ __device__ constexpr vec<n,T> max(T value, const vec<n,T> & v) { return max(v, value); }
 
 template < typename T >
-T clamp(const T & value, const T & lower, const T & upper) {
+__host__ __device__ constexpr T clamp(const T & value, const T & lower, const T & upper) {
   return std::max(lower, std::min(value, upper));
 }
 
 template < uint32_t n, typename T >
-inline vec<n,T> clamp(const vec<n,T> & v, T lower, T upper) {
+__host__ __device__ constexpr vec<n,T> clamp(const vec<n,T> & v, T lower, T upper) {
   vec<n,T> out{};
   for (uint32_t i = 0; i < n; i++) {
     out[i] = clamp(v[i], lower, upper);
@@ -361,12 +364,12 @@ inline vec<n,T> clamp(const vec<n,T> & v, T lower, T upper) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template < uint32_t n, typename T >
-T inner(const vec<n, T> & u, const vec<n, T> & v) {
+__host__ __device__ T inner(const vec<n, T> & u, const vec<n, T> & v) {
   return dot(u, v);
 }
 
 template < uint32_t n, typename T >
-auto chain_rule(const vec<n, T> & df_dx, T dx) {
+__host__ __device__ auto chain_rule(const vec<n, T> & df_dx, T dx) {
   vec<n, decltype(inner(T{}, T{}))> df{};
   for (int i = 0; i < n; i++) {
     df[i] = inner(df_dx[i], dx);
@@ -377,45 +380,25 @@ auto chain_rule(const vec<n, T> & df_dx, T dx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template < typename T >
-inline vec<2,T> xy(const vec<3,T> & v) { return {v[0], v[1]}; }
+__host__ __device__ constexpr vec<2,T> xy(const vec<3,T> & v) { return {v[0], v[1]}; }
 
 template < typename T >
-inline vec<2,T> xy(const vec<2,T> & v) { return v; }
+__host__ __device__ constexpr vec<2,T> xy(const vec<2,T> & v) { return v; }
 
 template < typename T >
-inline vec<3,T> xyz(const vec<2,T> & v) { return {v[0], v[1], T{}}; }
+__host__ __device__ constexpr vec<3,T> xyz(const vec<2,T> & v) { return {v[0], v[1], T{}}; }
 
 template < typename T >
-inline vec<3,T> xyz(const vec<3,T> & v) { return v; }
+__host__ __device__ constexpr vec<3,T> xyz(const vec<3,T> & v) { return v; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-constexpr int tensor_rank(double) { return 0; }
+__host__ __device__ constexpr int tensor_rank(double) { return 0; }
 
 template < int n, typename T >
-constexpr int tensor_rank(vec<n,T>) { return 1; }
-
-template < int n >
-std::ostream & operator<<(std::ostream & out, vec< n, double > v) {
-  out << '{';
-  for (int i = 0; i < n; i++) {
-    out << v[i];
-    if (i != n - 1) out << ", ";
-  }
-  out << '}';
-  return out;
-}
+__host__ __device__ constexpr int tensor_rank(vec<n,T>) { return 1; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template < typename T, uint32_t n >
-std::ostream & operator<<(std::ostream & out, vec<n,T> v) {
-  out << '{' << v(0);
-  for (int i = 1; i < n; i++) {
-    out << ", " << v(i);
-  }
-  out << '}';
-  return out;
-}
 
 }

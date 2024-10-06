@@ -6,15 +6,13 @@
 
 namespace fm {
 
-template < uint32_t n, typename T >
-std::ostream& operator<<(std::ostream& out, const vec<n,T> & v) {
-  out << '{';
-  for (uint32_t i = 0; i < n; i++) {
-    out << v[i];
-    if (i != n-1) out << ',';
+template < typename T, uint32_t n >
+std::ostream & operator<<(std::ostream & out, vec<n,T> v) {
+  out << '{' << v(0);
+  for (int i = 1; i < n; i++) {
+    out << ", " << v(i);
   }
   out << '}';
-
   return out;
 }
 

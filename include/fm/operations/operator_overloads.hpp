@@ -5,7 +5,7 @@ namespace fm {
 ////////////////////////////////////////////////////////////////////////////////
 
 template < Kind kind, u32 rows, u32 cols, typename T>
-constexpr auto operator*(T a, const matrix<kind, rows, cols, T> & B) {
+__host__ __device__ constexpr auto operator*(T a, const matrix<kind, rows, cols, T> & B) {
 
   if constexpr (kind == Kind::General || kind == Kind::Rotation) {
     mat<rows, cols, T> output;
@@ -27,7 +27,7 @@ constexpr auto operator*(T a, const matrix<kind, rows, cols, T> & B) {
 }
 
 template < Kind kind, u32 rows, u32 cols, typename T>
-constexpr auto operator*(const matrix<kind, rows, cols, T> & B, const T a) {
+__host__ __device__ constexpr auto operator*(const matrix<kind, rows, cols, T> & B, const T a) {
 
   if constexpr (kind == Kind::General || kind == Kind::Rotation) {
     mat<rows, cols, T> output;
@@ -49,7 +49,7 @@ constexpr auto operator*(const matrix<kind, rows, cols, T> & B, const T a) {
 }
 
 template < Kind kind, u32 rows, u32 cols, typename T>
-constexpr auto operator*=(matrix<kind, rows, cols, T> & A, T scale) {
+__host__ __device__ constexpr auto operator*=(matrix<kind, rows, cols, T> & A, T scale) {
   static_assert(kind != Kind::Rotation, "rotation matrices don't support operator*=(scalar)");
   if constexpr (kind == Kind::General) {
     for (u32 i = 0; i < rows; i++) {
@@ -65,7 +65,7 @@ constexpr auto operator*=(matrix<kind, rows, cols, T> & A, T scale) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template < Kind kindA, Kind kindB, u32 m, u32 n, typename T>
-constexpr auto operator+=(matrix<kindA, m, n, T> & A, 
+__host__ __device__ constexpr auto operator+=(matrix<kindA, m, n, T> & A, 
                           const matrix<kindB, m, n, T> & B) {
 
   if constexpr (kindA == Kind::General) {
@@ -178,7 +178,7 @@ constexpr auto operator+=(matrix<kindA, m, n, T> & A,
 ////////////////////////////////////////////////////////////////////////////////
 
 template < Kind kind, u32 rows, u32 cols, typename T>
-constexpr auto operator/(T a, const matrix<kind, rows, cols, T> & B) {
+__host__ __device__ constexpr auto operator/(T a, const matrix<kind, rows, cols, T> & B) {
 
   if constexpr (kind == Kind::General || kind == Kind::Rotation) {
     mat<rows, cols, T> output;
@@ -200,7 +200,7 @@ constexpr auto operator/(T a, const matrix<kind, rows, cols, T> & B) {
 }
 
 template < Kind kind, u32 rows, u32 cols, typename T>
-constexpr auto operator/(const matrix<kind, rows, cols, T> & B, const T a) {
+__host__ __device__ constexpr auto operator/(const matrix<kind, rows, cols, T> & B, const T a) {
 
   if constexpr (kind == Kind::General || kind == Kind::Rotation) {
     mat<rows, cols, T> output;
@@ -222,7 +222,7 @@ constexpr auto operator/(const matrix<kind, rows, cols, T> & B, const T a) {
 }
 
 template < Kind kind, u32 rows, u32 cols, typename T>
-constexpr auto operator/=(matrix<kind, rows, cols, T> & A, T scale) {
+__host__ __device__ constexpr auto operator/=(matrix<kind, rows, cols, T> & A, T scale) {
   static_assert(kind != Kind::Rotation, "rotation matrices don't support operator/=(scalar)");
   if constexpr (kind == Kind::General) {
     for (u32 i = 0; i < rows; i++) {
@@ -238,7 +238,7 @@ constexpr auto operator/=(matrix<kind, rows, cols, T> & A, T scale) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template < Kind kindA, Kind kindB, u32 rows, u32 cols, typename TA, typename TB>
-constexpr auto operator-(const matrix<kindA, rows, cols, TA> & A, 
+__host__ __device__ constexpr auto operator-(const matrix<kindA, rows, cols, TA> & A, 
                          const matrix<kindB, rows, cols, TB> & B) {
 
   using T = decltype(TA{} - TB{});
@@ -268,7 +268,7 @@ constexpr auto operator-(const matrix<kindA, rows, cols, TA> & A,
 }
 
 template < Kind kindA, Kind kindB, u32 rows, u32 cols, typename TA, typename TB>
-constexpr auto operator+(const matrix<kindA, rows, cols, TA> & A, 
+__host__ __device__ constexpr auto operator+(const matrix<kindA, rows, cols, TA> & A, 
                          const matrix<kindB, rows, cols, TB> & B) {
 
   using T = decltype(TA{} + TB{});
@@ -284,15 +284,15 @@ constexpr auto operator+(const matrix<kindA, rows, cols, TA> & A,
   }
 
   if constexpr (kindA == Kind::Isotropic && kindB == Kind::Isotropic) {
-    return iso<rows, T>{A.data - B.data};
+    return iso<rows, T>{A.data + B.data};
   }
 
   if constexpr (kindA == Kind::Diagonal && kindB == Kind::Diagonal) {
-    return diag<rows, T>{A.data - B.data};
+    return diag<rows, T>{A.data + B.data};
   }
 
   if constexpr (kindA == Kind::Skew && kindB == Kind::Skew) {
-    return skew<rows, T>{A.data - B.data};
+    return skew<rows, T>{A.data + B.data};
   }
 
 }
