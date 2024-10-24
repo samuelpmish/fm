@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "fm/macros.hpp"
 #include "fm/types/matrix.hpp"
 
 namespace fm {
@@ -26,7 +27,33 @@ std::ostream& operator<<(std::ostream& out, const mat<m,n,T> & A) {
   out << '}';
 
   return out;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+__host__ __device__ void print(uint32_t u) { printf("%d", u); }
+__host__ __device__ void print(float f) { printf("%f", f); }
+__host__ __device__ void print(uint64_t u) { printf("%lu", u); }
+__host__ __device__ void print(double f) { printf("%f", f); }
+
+template < typename T, uint32_t n >
+__host__ __device__ void print(const vec<n,T> & v) {
+  printf("{");
+  for (int i = 0; i < n; i++) {
+    print(v[i]);
+    if (i != n-1) printf(", ");
+  }
+  printf("}");
+}
+
+template < uint32_t m, uint32_t n, typename T >
+__host__ __device__ void print(const mat<m,n,T> & A) {
+  printf("{");
+  for (uint32_t i = 0; i < m; i++) {
+    print(A[i]);
+    if (i != m-1) printf(", ");
+  }
+  printf("}");
 }
 
 }
