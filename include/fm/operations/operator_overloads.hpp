@@ -253,6 +253,24 @@ __host__ __device__ constexpr auto operator-(const matrix<kindA, rows, cols, TA>
     return output;
   }
 
+  if constexpr (kindA == Kind::Symmetric) {
+    if constexpr (kindB == Kind::Symmetric) {
+      return matrix< Kind::Symmetric, rows, cols, T >{A.data - B.data};
+    }
+
+    if constexpr (kindB == Kind::Isotropic) {
+      matrix< Kind::Symmetric, rows, cols, T > output{};
+      for (u32 i = 0; i < decltype(output)::num_values; i++) {
+        output.data[i] = A.data[i];
+      }
+
+      for (u32 i = 0; i < rows; i++) {
+        output(i, i) -= B.data;
+      }
+      return output;
+    }
+  }
+
   if constexpr (kindA == Kind::Isotropic && kindB == Kind::Isotropic) {
     return iso<rows, T>{A.data - B.data};
   }
