@@ -3,6 +3,7 @@
 #include "fm/types/matrix.hpp"
 
 namespace fm {
+__host__ __device__ constexpr auto transpose(const double & x) { return x; }
 
 template <Kind kind, u32 rows, u32 cols, typename T>
 __host__ __device__ constexpr auto transpose(const matrix<kind, rows, cols, T>& A) {

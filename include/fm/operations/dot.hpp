@@ -2,6 +2,16 @@
 
 namespace fm {
 
+template < Kind kind, u32 m, u32 n, typename T>
+__host__ __device__ constexpr auto dot(const matrix<kind, m, n, T> & A, const double x) {
+  return A * x;
+}
+
+template < Kind kind, u32 m, u32 n, typename T>
+__host__ __device__ constexpr auto dot(const double x, const matrix<kind, m, n, T> & A) {
+  return x * A;
+}
+
 template < Kind kind, u32 m, u32 n, typename S, typename T>
 __host__ __device__ constexpr auto dot(const vec<m, S> & x, const matrix<kind, m, n, T> & A) {
 
