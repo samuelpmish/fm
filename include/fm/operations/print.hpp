@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "fm/types/AABB.hpp"
+#include "fm/types/vec.hpp"
 #include "fm/types/matrix.hpp"
 
 namespace fm {
@@ -27,6 +29,12 @@ std::ostream& operator<<(std::ostream& out, const mat<m,n,T> & A) {
 
   return out;
 
+}
+
+template < typename T, int n >
+std::ostream & operator<<(std::ostream & out, const AABB<n,T> & v) {
+  out << '{' << v.min << ", " << v.max << "}";
+  return out;
 }
 
 }
