@@ -9,7 +9,9 @@
 #include "fm/operations/print.hpp"
 
 #ifdef __CUDACC__
+
 __device__ bool pass;
+
 #define CUDA_EXPECT_NEAR(A, B, tolerance)                      \
   if (fabs((A) - (B)) > tolerance) {                           \
     pass = false;                                              \
