@@ -211,23 +211,30 @@ __host__ __device__ constexpr rot<3,T> RotationMatrix(const vec<3,T> & axis_angl
 template <u32 dim, typename T>
 struct matrix<Kind::Symmetric, dim, dim, T> {
   using type = T;
+  static constexpr u32 num_values = (dim*(dim+1)) / 2;
   __host__ __device__ static constexpr u32 nrows() { return dim; }
   __host__ __device__ static constexpr u32 ncols() { return dim; }
 
-  static constexpr u32 num_values = (dim*(dim+1)) / 2;
+  __host__ __device__ matrix() : data{} {}
+
+  __host__ __device__ explicit matrix(matrix<Kind::General, dim, dim, T> A) : data{} {
+    for (u32 i = 0; i < dim; i++) {
+      for (u32 j = 0; j < dim; j++) {
+        data[index(i,j)] += ((i == j) ? 1.0 : 0.5) * A(i,j);
+      }
+    }
+  }
+
+  __host__ __device__ matrix(const vec<num_values, T> & values) : data{values} {}
+
+  __host__ __device__ matrix(const T (&values)[num_values]) : data{values} {}
 
   __host__ __device__ constexpr auto & operator()(u32 i, u32 j) { return data[index(i,j)]; }
   __host__ __device__ constexpr const auto & operator()(u32 i, u32 j) const { return data[index(i,j)]; }
 
   __host__ __device__ constexpr u32 index(u32 i, u32 j) const {
-    #ifdef __CUDACC__
-      u32 i_upper = (i < j) ? i : j;
-      u32 j_upper = (i < j) ? j : i;
-    #else
-      u32 i_upper = std::min(i, j);
-      u32 j_upper = std::max(i, j);
-    #endif
-
+    u32 i_upper = (i < j) ? i : j;
+    u32 j_upper = (i < j) ? j : i;
     return j_upper + ((2 * dim - i_upper - 1) * i_upper) / 2;
   }
 

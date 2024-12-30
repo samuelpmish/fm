@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "fm/types/AABB.hpp"
+#include "fm/types/vec.hpp"
 #include "fm/macros.hpp"
 #include "fm/types/matrix.hpp"
 
@@ -33,7 +35,7 @@ std::ostream& operator<<(std::ostream& out, const mat<m,n,T> & A) {
 
 __host__ __device__ inline void print(uint32_t u) { printf("%d", u); }
 __host__ __device__ inline void print(float f) { printf("%f", f); }
-__host__ __device__ inline void print(uint64_t u) { printf("%lu", u); }
+__host__ __device__ inline void print(uint64_t u) { printf("%llu", u); }
 __host__ __device__ inline void print(double f) { printf("%f", f); }
 
 template < typename T, uint32_t n >
@@ -54,6 +56,12 @@ __host__ __device__ void print(const mat<m,n,T> & A) {
     if (i != m-1) printf(", ");
   }
   printf("}");
+}
+
+template < typename T, int n >
+std::ostream & operator<<(std::ostream & out, const AABB<n,T> & v) {
+  out << '{' << v.min << ", " << v.max << "}";
+  return out;
 }
 
 }
