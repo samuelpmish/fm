@@ -23,6 +23,8 @@ struct Eigensystem {
 // eigenvectors of 3x3 symmetric matrices", by Scherzinger & Dohrmann
 __host__ __device__ inline Eigensystem<3> eig(const sym3 & A) {
 
+  constexpr double pi = 3.1415926535897932384626433832795028841971693993751;
+
   vec<3> eigenvalues = {0.0, 0.0, 0.0};
   mat<3,3> eigenvectors = {{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}};
 
@@ -38,14 +40,11 @@ __host__ __device__ inline Eigensystem<3> eig(const sym3 & A) {
     double alpha = acos(fmin(fmax(tmp, -1.0), 1.0)) / 3.0;
 
     // consider the most distinct eigenvalue first
-    if (6.0 * alpha < M_PI) {
+    if (6.0 * alpha < pi) {
       eigenvalues[0] = 2 * sqrt(J2 / 3.0) * cos(alpha);
     } else {
-      eigenvalues[0] = 2 * sqrt(J2 / 3.0) * cos(alpha + 2.0 * M_PI / 3.0);
+      eigenvalues[0] = 2 * sqrt(J2 / 3.0) * cos(alpha + 2.0 * pi / 3.0);
     }
-
-    std::cout << J2 << " " << J3 << std::endl;
-    std::cout << eigenvalues[0] << std::endl;
 
     // find the eigenvector for that eigenvalue
     vec3 r[3];
@@ -89,17 +88,13 @@ __host__ __device__ inline Eigensystem<3> eig(const sym3 & A) {
     double A22 = dot(s1, A_dev_s1);
 
 #if 1
-    //double delta = 0.5 * signum(A11-A22) * sqrt((A11-A22)*(A11-A22) + 4*A12*A21);
     double delta = 0.5 * sqrt((A11-A22)*(A11-A22) + 4*A12*A21);
-
-    std::cout << A11 << " " << A12 << " " << A21 << " " << A22 << " " << delta << std::endl;
+#else
+    double delta = 0.5 * signum(A11-A22) * sqrt((A11-A22)*(A11-A22) + 4*A12*A21);
+#endif
 
     eigenvalues[1] = 0.5 * (A11 + A22) - delta;
     eigenvalues[2] = 0.5 * (A11 + A22) + delta;
-#else
-    eigenvalues[1] = 0.5 * (A11 + A22) - 0.5 * signum(A11-A22) * sqrt((A11-A22)*(A11-A22) + 4*A12*A21);
-    eigenvalues[2] = 0.5 * (A11 + A22) - eigenvalues[1];
-#endif
 
     // if the remaining eigenvalues are exactly the same
     // then just use the basis for the orthogonal complement
