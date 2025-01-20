@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <cinttypes>
 #include <algorithm> // for std::{min,max}
 
 #include "fm/macros.hpp"

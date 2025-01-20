@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& out, const mat<m,n,T> & A) {
 
 __host__ __device__ inline void print(uint32_t u) { printf("%d", u); }
 __host__ __device__ inline void print(float f) { printf("%f", f); }
-__host__ __device__ inline void print(uint64_t u) { printf("%llu", u); }
+__host__ __device__ inline void print(uint64_t u) { printf("%" PRId64, u); }
 __host__ __device__ inline void print(double f) { printf("%f", f); }
 
 template < typename T, uint32_t n >
