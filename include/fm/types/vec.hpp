@@ -286,6 +286,11 @@ __host__ __device__ constexpr auto dot(const vec< dim, S > & u, const vec< dim, 
 
 // vector-vector products
 template <typename T>
+__host__ __device__ constexpr vec<2,T> cross(const vec<2,T> & u) {
+  return vec<2,T>{-u[1], u[0]};
+}
+
+template <typename T>
 __host__ __device__ constexpr vec<3,T> cross(const vec<3,T> & u, const vec<3,T> & v) {
   return vec<3,T>{
     u[1] * v[2] - u[2] * v[1], 
