@@ -41,4 +41,9 @@ __host__ __device__ AABB<dim,T> intersection_of(AABB<dim,T> a, AABB<dim,T> b) {
   return AABB<dim,T>{fm::max(a.min, b.min), fm::min(a.max, b.max)};
 }
 
+template < int dim, typename T >
+__host__ __device__ AABB<dim,T> union_of(AABB<dim,T> a, AABB<dim,T> b) {
+  return AABB<dim,T>{fm::min(a.min, b.min), fm::max(a.max, b.max)};
+}
+
 }
